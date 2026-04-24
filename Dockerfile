@@ -14,7 +14,7 @@ COPY shared/ shared/
 COPY frontend/ frontend/
 ARG VITE_GOOGLE_CLIENT_ID
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
-RUN cd frontend && (pnpm run build || true)
+RUN cd frontend && npx vite build
 
 # ── Stage 3: Build backend ──
 FROM deps AS backend-build
