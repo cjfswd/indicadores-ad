@@ -18,7 +18,7 @@ export function softAuth(req: Request, _res: Response, next: NextFunction) {
   if (header?.startsWith('Bearer ')) {
     try {
       const payload = jwt.verify(header.slice(7), SESSION_SECRET) as SessionPayload
-      ;(req as Record<string, unknown>).user = {
+      ;(req as unknown as Record<string, unknown>).user = {
         id: payload.userId,
         perfil: payload.perfil,
         email: payload.email,
@@ -42,7 +42,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 
   try {
     const payload = jwt.verify(header.slice(7), SESSION_SECRET) as SessionPayload
-    ;(req as Record<string, unknown>).user = {
+    ;(req as unknown as Record<string, unknown>).user = {
       id: payload.userId,
       perfil: payload.perfil,
       email: payload.email,

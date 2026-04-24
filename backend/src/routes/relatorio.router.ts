@@ -351,7 +351,7 @@ relatorioRouter.get('/excel/:ano/:mes', async (req, res) => {
   if (fs.existsSync(LOGO_PATH)) {
     const xlLogoW = 180
     const xlLogoH = xlLogoW * (344 / 1188)
-    const logoId = wb.addImage({ buffer: fs.readFileSync(LOGO_PATH), extension: 'png' })
+    const logoId = wb.addImage({ buffer: fs.readFileSync(LOGO_PATH) as Buffer, extension: 'png' })
     ws.addImage(logoId, { tl: { col: 0, row: 0 }, ext: { width: xlLogoW, height: xlLogoH } })
     startRow = 4
   }

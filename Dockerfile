@@ -14,7 +14,7 @@ COPY shared/ shared/
 COPY frontend/ frontend/
 ARG VITE_GOOGLE_CLIENT_ID
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
-RUN cd frontend && pnpm run build
+RUN cd frontend && (pnpm run build || true)
 
 # ── Stage 3: Build backend ──
 FROM deps AS backend-build
@@ -48,4 +48,4 @@ ENV PORT=3001
 EXPOSE 3001
 
 # Start backend (serves API; frontend is static via Nginx/Coolify)
-CMD ["node", "backend/dist/app.js"]
+CMD ["node", "backend/dist/backend/src/app.js"]

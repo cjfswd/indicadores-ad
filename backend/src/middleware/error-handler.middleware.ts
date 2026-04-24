@@ -13,7 +13,7 @@ export function errorHandler(
       error: err.message,
       code: err.code,
       statusCode: err.statusCode,
-      requestId: (req as Record<string, unknown>).requestId,
+      requestId: (req as unknown as Record<string, unknown>).requestId,
     })
 
     res.status(err.statusCode).json({
@@ -27,7 +27,7 @@ export function errorHandler(
   logger.error({
     error: err.message,
     stack: err.stack,
-    requestId: (req as Record<string, unknown>).requestId,
+    requestId: (req as unknown as Record<string, unknown>).requestId,
   })
 
   res.status(500).json({

@@ -11,7 +11,7 @@ interface RequestUser {
  * Returns null if no user is attached (unauthenticated request).
  */
 export function getRequestUser(req: Request): RequestUser | null {
-  const user = (req as Record<string, unknown>).user as RequestUser | undefined
+  const user = (req as unknown as Record<string, unknown>).user as RequestUser | undefined
   return user ?? null
 }
 

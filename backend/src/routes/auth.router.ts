@@ -101,7 +101,7 @@ authRouter.post('/google', async (req, res) => {
   const sessionToken = jwt.sign(
     { userId: user.id, perfil: user.perfil, email: user.email },
     SESSION_SECRET,
-    { expiresIn: SESSION_EXPIRES_IN },
+    { expiresIn: SESSION_EXPIRES_IN as jwt.SignOptions['expiresIn'] },
   )
 
   res.json({

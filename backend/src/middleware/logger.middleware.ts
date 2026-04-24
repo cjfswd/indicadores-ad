@@ -8,7 +8,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
   const requestId = uuid()
   const startedAt = Date.now()
 
-  ;(req as Record<string, unknown>).requestId = requestId
+  ;(req as unknown as Record<string, unknown>).requestId = requestId
 
   const safeBody = sanitizeBody(req.body as Record<string, unknown>)
 
@@ -21,11 +21,11 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
       url: req.originalUrl,
       status_code: res.statusCode,
       duration_ms: Date.now() - startedAt,
-      usuario_id: (req as Record<string, unknown>).user
-        ? ((req as Record<string, unknown>).user as Record<string, string>).id
+      usuario_id: (req as unknown as Record<string, unknown>).user
+        ? ((req as unknown as Record<string, unknown>).user as Record<string, string>).id
         : null,
-      usuario_email: (req as Record<string, unknown>).user
-        ? ((req as Record<string, unknown>).user as Record<string, string>).email
+      usuario_email: (req as unknown as Record<string, unknown>).user
+        ? ((req as unknown as Record<string, unknown>).user as Record<string, string>).email
         : null,
       ip: req.ip,
       user_agent: req.headers['user-agent'],

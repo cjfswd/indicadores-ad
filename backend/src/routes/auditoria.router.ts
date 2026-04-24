@@ -104,9 +104,9 @@ auditoriaRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res)
   }
 
   const arquivoUrl = req.file ? `/uploads/${req.file.filename}` : null
-  const now = new Date()
-  const ano = now.getFullYear()
-  const mes = now.getMonth() + 1
+  const currentDate = new Date()
+  const ano = currentDate.getFullYear()
+  const mes = currentDate.getMonth() + 1
 
   // ── Executar reversão + capturar snapshots ──
   let entityBefore: unknown = null

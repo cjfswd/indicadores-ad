@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'indicadores-api',
-      script: './backend/dist/app.js',
+      script: './backend/dist/backend/src/app.js',
       cwd: '/app/indicadores',
       instances: 1,
       exec_mode: 'fork',

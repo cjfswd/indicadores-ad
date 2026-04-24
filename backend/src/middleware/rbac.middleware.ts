@@ -4,7 +4,7 @@ import type { Perfil } from '@indicadores/shared'
 
 export function requirePerfil(...perfisPermitidos: Perfil[]) {
   return (req: Request, _res: Response, next: NextFunction) => {
-    const user = (req as Record<string, unknown>).user as { perfil: string } | undefined
+    const user = (req as unknown as Record<string, unknown>).user as { perfil: string } | undefined
     if (!user) {
       throw new ForbiddenError('Usuário não autenticado')
     }
