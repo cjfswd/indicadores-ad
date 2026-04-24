@@ -150,15 +150,16 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[var(--radius-md)] bg-blue-500/15 text-blue-400 flex items-center justify-center">
-            <TrendingUp size={20} />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-[var(--radius-md)] bg-blue-500/15 text-blue-400 flex items-center justify-center">
+            <TrendingUp size={16} className="sm:hidden" />
+            <TrendingUp size={20} className="hidden sm:block" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Dashboard</h1>
+            <h1 className="text-lg sm:text-2xl font-bold text-[var(--color-text-primary)]">Dashboard</h1>
             <p className="text-sm text-[var(--color-text-muted)] mt-1">
               Visão consolidada dos indicadores assistenciais
             </p>
@@ -167,7 +168,7 @@ export function DashboardPage() {
       </div>
 
       {/* Período + Exportação */}
-      <div className="glass-card p-4 space-y-3 relative z-10">
+      <div className="glass-card p-3 sm:p-4 space-y-3 relative z-10">
         <div className="flex flex-wrap items-center gap-3">
           <CalendarRange size={14} className="text-[var(--color-accent)]" />
           <span className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">Período</span>
@@ -264,17 +265,17 @@ export function DashboardPage() {
 
       {/* Semáforo Grid */}
       <div>
-        <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-4">
+        <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3 sm:mb-4">
           Indicadores — Semáforos
         </h2>
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
             {Array.from({ length: 9 }).map((_, i) => (
               <div key={i} className="glass-card p-4 h-32 animate-pulse bg-[var(--overlay-soft)]" />
             ))}
           </div>
         ) : (
-          <div id="semaforo-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div id="semaforo-grid" className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
             {semaforos.map((item, i) => (
               <SemaforoCard
                 key={item.codigo}
@@ -288,7 +289,7 @@ export function DashboardPage() {
       </div>
 
       {/* Gráficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
         <GraficoTendencia
           dados={historico}
           meta={selected?.meta}
@@ -302,7 +303,7 @@ export function DashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-6">
         <div id="grafico-pizza">
           <GraficoPizza
             dados={dadosModalidade}
@@ -317,7 +318,7 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-6">
         <div id="grafico-obitos">
           <GraficoPizza
             dados={dadosObitos}

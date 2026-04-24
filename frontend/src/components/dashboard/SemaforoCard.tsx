@@ -50,7 +50,7 @@ export function SemaforoCard({ item, index, onClick }: SemaforoCardProps) {
     <button
       onClick={onClick}
       className={clsx(
-        'glass-card p-4 text-left w-full transition-all duration-200 animate-fade-in',
+        'glass-card p-3 sm:p-4 text-left w-full transition-all duration-200 animate-fade-in',
         styles.glow,
         styles.border,
         'hover:scale-[1.02] active:scale-[0.99]',
@@ -58,7 +58,7 @@ export function SemaforoCard({ item, index, onClick }: SemaforoCardProps) {
       style={{ animationDelay: `${index * 60}ms` }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2 sm:mb-3">
         <div className="flex items-center gap-2">
           <span className={clsx('w-2.5 h-2.5 rounded-full animate-pulse-dot', styles.dot)} />
           <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
@@ -80,7 +80,7 @@ export function SemaforoCard({ item, index, onClick }: SemaforoCardProps) {
       <p className="text-sm font-medium text-[var(--color-text-secondary)] leading-tight mb-1 truncate">
         {item.nome}
       </p>
-      <p className="text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
+      <p className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)] tabular-nums">
         {item.valor}{item.unidade === '%' ? '%' : ''}
       </p>
 

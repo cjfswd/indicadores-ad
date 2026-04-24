@@ -18,10 +18,10 @@ export function ResumoCard({ icon, label, valor, descricao, variacao, colorClass
   const sparkData = sparkline?.map((v, i) => ({ i, v }))
 
   return (
-    <div className="glass-card p-5 flex flex-col gap-3 animate-fade-in">
+    <div className="glass-card p-3 sm:p-5 flex flex-col gap-2 sm:gap-3 animate-fade-in">
       <div className="flex items-center justify-between">
         <div className={clsx(
-          'w-10 h-10 rounded-[var(--radius-md)] flex items-center justify-center',
+          'w-8 h-8 sm:w-10 sm:h-10 rounded-[var(--radius-md)] flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-5 sm:[&>svg]:h-5',
           colorClass ?? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]',
         )}>
           {icon}
@@ -49,7 +49,7 @@ export function ResumoCard({ icon, label, valor, descricao, variacao, colorClass
         <p className="text-[var(--color-text-muted)] text-xs font-medium uppercase tracking-wider">
           {label}
         </p>
-        <p className="text-3xl font-bold text-[var(--color-text-primary)] mt-1 tabular-nums">
+        <p className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] mt-0.5 sm:mt-1 tabular-nums">
           {valor}
         </p>
         {descricao && (
