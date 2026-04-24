@@ -16,6 +16,7 @@ const PORT = Number(process.env.PORT ?? 3001)
 // ─── Segurança ───
 app.use(helmet({
   contentSecurityPolicy: false,
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
 }))
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' ? true : (process.env.FRONTEND_URL ?? 'http://localhost:5173'),
