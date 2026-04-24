@@ -37,8 +37,11 @@ COPY --from=frontend-build /app/frontend/dist frontend/dist
 COPY --from=backend-build /app/backend/dist backend/dist
 COPY backend/src/config/migrations backend/src/config/migrations
 COPY backend/scripts backend/scripts
-COPY shared/src shared/src
 COPY nginx/ nginx/
+
+# Copy compiled shared JS (tsc output includes shared)
+COPY --from=backend-build /app/backend/dist/shared/src shared/src
+RUN sed -i 's/index\.ts/index.js/g' shared/package.json
 
 # Uploads directory
 RUN mkdir -p backend/uploads
