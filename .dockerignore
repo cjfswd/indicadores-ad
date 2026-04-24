@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+.git/
+.gitignore
+*.log
+logs/
+coverage/
+.DS_Store
+Thumbs.db
+.VSCodeCounter/
+uploads/
+*.tsbuildinfo
+doc.md
+frontend/dev-dist/
