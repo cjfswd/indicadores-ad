@@ -1,0 +1,19 @@
+{
+  "name": "indicadores-ad",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Sistema de Indicadores de Atenção Domiciliar (AD/ID)",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev:backend": "pnpm --filter backend dev",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:coverage": "pnpm -r test:coverage"
+  }
+}

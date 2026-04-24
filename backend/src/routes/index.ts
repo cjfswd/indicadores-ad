@@ -1,0 +1,8 @@
+export { registrosRouter } from './registros.router.js'
+export { pacientesRouter } from './pacientes.router.js'
+export { metasRouter } from './metas.router.js'
+export { semaforoRouter } from './semaforo.router.js'
+export { auditoriaRouter } from './auditoria.router.js'
+export { eventosRouter } from './eventos.router.js'
+export { relatorioRouter } from './relatorio.router.js'
+export { authRouter } from './auth.router.js'
