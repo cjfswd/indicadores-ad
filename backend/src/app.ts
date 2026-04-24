@@ -16,7 +16,7 @@ const PORT = Number(process.env.PORT ?? 3001)
 // ─── Segurança ───
 app.use(helmet())
 app.use(cors({
-  origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
+  origin: process.env.NODE_ENV === 'production' ? true : (process.env.FRONTEND_URL ?? 'http://localhost:5173'),
   credentials: true,
 }))
 
@@ -51,6 +51,15 @@ app.use('/api/v1/relatorio', relatorioRouter)
 
 // ─── Arquivos (uploads) ───
 app.use('/uploads', express.static('uploads'))
+
+// ─── Frontend SPA (produção) ───
+if (process.env.NODE_ENV === 'production') {
+  const frontendPath = new URL('../../../../frontend/dist', import.meta.url).pathname
+  app.use(express.static(frontendPath))
+  app.get('*', (_req, res) => {
+    res.sendFile('index.html', { root: frontendPath })
+  })
+}
 
 // ─── Error Handler (sempre último) ───
 app.use(errorHandler)
