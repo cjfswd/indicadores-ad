@@ -15,19 +15,7 @@ const PORT = Number(process.env.PORT ?? 3001)
 
 // ─── Segurança ───
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://apis.google.com", "https://www.gstatic.com"],
-      scriptSrcElem: ["'self'", "https://accounts.google.com", "https://apis.google.com", "https://www.gstatic.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:", "blob:"],
-      connectSrc: ["'self'", "https://accounts.google.com", "https://oauth2.googleapis.com", "https://www.googleapis.com"],
-      frameSrc: ["'self'", "https://accounts.google.com"],
-      workerSrc: ["'self'"],
-    },
-  },
+  contentSecurityPolicy: false,
 }))
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' ? true : (process.env.FRONTEND_URL ?? 'http://localhost:5173'),
