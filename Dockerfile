@@ -8,10 +8,16 @@ COPY frontend/package.json frontend/
 COPY shared/package.json shared/
 RUN pnpm install --frozen-lockfile
 
-# ── Stage 2: Build frontend ──
-FROM deps AS frontend-build
-COPY shared/ shared/
+# ── Stage 2: Build frontend (slim for workbox/PWA compatibility) ──
+FROM node:20-slim AS frontend-build
+RUN npm i -g pnpm@10
+WORKDIR /app
+COPY --from=deps /app/node_modules node_modules/
+COPY --from=deps /app/frontend/node_modules frontend/node_modules/
+COPY --from=deps /app/shared/node_modules shared/node_modules/
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY frontend/ frontend/
+COPY shared/ shared/
 ARG VITE_GOOGLE_CLIENT_ID
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 RUN cd frontend && npx vite build
