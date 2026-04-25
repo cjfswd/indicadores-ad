@@ -44,7 +44,7 @@ auditoriaRouter.get('/', async (req, res) => {
 
   const rows = await baseQuery
     .selectAll()
-    .orderBy('timestamp desc')
+    .orderBy('timestamp', 'desc')
     .limit(porPagina)
     .offset((pagina - 1) * porPagina)
     .execute()
@@ -63,7 +63,7 @@ auditoriaRouter.get('/:entidade/:id', async (req, res) => {
     .selectAll()
     .where('entidade', '=', req.params.entidade)
     .where('entidade_id', '=', req.params.id)
-    .orderBy('timestamp desc')
+    .orderBy('timestamp', 'desc')
     .execute()
 
   res.json({ dados: rows })

@@ -331,17 +331,6 @@ export function RegistroPage() {
                 {isCollapsed(grupo.codigo) ? <ChevronRight size={16} className="text-[var(--color-text-muted)]" /> : <ChevronDown size={16} className="text-[var(--color-text-muted)]" />}
                 <span className="text-xs font-mono text-[var(--color-text-muted)] bg-[var(--overlay-soft)] px-2 py-0.5 rounded">{grupo.codigo}</span>
                 <span className="text-sm font-semibold text-[var(--color-accent)]">{grupo.titulo}</span>
-                <div className="ml-auto flex items-center gap-3">
-                  {grupo.campos.map(c => {
-                    const v = valores[c.key] ?? 0
-                    return (
-                      <span key={c.key} className={clsx('text-xs tabular-nums font-semibold px-2 py-0.5 rounded',
-                        v > 0 ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]' : 'text-[var(--color-surface-3)]')}>
-                        {v}
-                      </span>
-                    )
-                  })}
-                </div>
               </button>
 
               {/* Grupo Content */}
@@ -408,7 +397,7 @@ export function RegistroPage() {
                                 {/* Delete button */}
                                 {!isLocked && (
                                   <button onClick={() => setConfirmDeleteId(ev.id)}
-                                    className="p-1.5 rounded-[var(--radius-sm)] text-[var(--color-surface-3)] opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
+                                    className="p-1.5 rounded-[var(--radius-sm)] text-[var(--color-surface-3)] sm:opacity-0 sm:group-hover:opacity-100 hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
                                     title="Remover evento (decrementa)">
                                     <Trash2 size={13} />
                                   </button>
@@ -476,27 +465,7 @@ export function RegistroPage() {
                   className="w-full px-3 py-2.5 rounded-[var(--radius-md)] text-sm bg-[var(--color-surface-0)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-surface-3)] resize-none" />
               </label>
 
-              {/* Upload de arquivo */}
-              <label className="flex flex-col gap-1.5">
-                <span className="text-xs text-[var(--color-text-muted)] font-medium">Anexo (opcional)</span>
-                <div className="relative">
-                  <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                    onChange={e => setModalArquivo(e.target.files?.[0] ?? null)}
-                    className="w-full text-sm file:mr-3 file:px-3 file:py-1.5 file:rounded-[var(--radius-md)] file:border-0 file:text-xs file:font-medium file:bg-[var(--color-accent)]/10 file:text-[var(--color-accent)] file:cursor-pointer hover:file:bg-[var(--color-accent)]/20 text-[var(--color-text-muted)] cursor-pointer" />
-                </div>
-                {modalArquivo && (
-                  <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
-                    <Paperclip size={12} className="text-[var(--color-accent)]" />
-                    <span className="truncate">{modalArquivo.name}</span>
-                    <span className="text-[var(--color-text-muted)]">
-                      ({(modalArquivo.size / 1024).toFixed(0)} KB)
-                    </span>
-                    <button onClick={() => setModalArquivo(null)} className="text-[var(--color-text-muted)] hover:text-red-400">
-                      <X size={12} />
-                    </button>
-                  </div>
-                )}
-              </label>
+              <AnexoInput arquivo={modalArquivo} onChange={setModalArquivo} />
             </div>
 
             <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-[var(--overlay-border)]">

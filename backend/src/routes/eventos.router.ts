@@ -43,7 +43,7 @@ eventosRouter.get('/', async (req, res) => {
   if (req.query.tipo_evento) query = query.where('e.tipo_evento', '=', req.query.tipo_evento as string)
   if (req.query.paciente_id) query = query.where('e.paciente_id', '=', req.query.paciente_id as string)
 
-  const rows = await query.orderBy('e.criado_em desc').execute()
+  const rows = await query.orderBy('e.criado_em', 'desc').execute()
   res.json({ dados: rows, total: rows.length })
 })
 
