@@ -5,7 +5,7 @@ import { ResumoCard } from '@/components/dashboard/ResumoCard'
 import { SemaforoCard } from '@/components/dashboard/SemaforoCard'
 import { GraficoBarrasSimples } from '@/components/dashboard/GraficoBarras'
 import { GraficoPizza } from '@/components/dashboard/GraficoPizza'
-import { api } from '@/lib/api'
+import { apiClient, type SemaforoIndicador } from '@/lib/api-client'
 import { getMockDashboard, type SemaforoItem } from '@/lib/mock-data'
 import { CHART_COLORS, MESES_LABELS } from '@/lib/chart-helpers'
 
@@ -37,18 +37,18 @@ export function DashboardPage() {
     async function fetchData() {
       setLoading(true)
       try {
-        const [semaforoRes, registroRes] = await Promise.all([
-          api.get(`/semaforo/${ano}/${mes}`),
-          api.get(`/registros/${ano}/${mes}`).catch(() => null),
+        const [semaforoData, registroData] = await Promise.all([
+          apiClient.semaforo.buscar(ano, mes),
+          apiClient.registros.buscarMes(ano, mes).catch(() => null),
         ])
 
-        const apiSemaforos: SemaforoItem[] = semaforoRes.data.indicadores.map((s: SemaforoApiItem) => ({
+        const apiSemaforos: SemaforoItem[] = semaforoData.indicadores.map((s: SemaforoIndicador) => ({
           ...s,
           unidade: s.codigo === '01' || s.codigo === '03' || s.codigo === '05' ? '%' as const : 'abs' as const,
           subtipos: [],
         }))
         setSemaforos(apiSemaforos)
-        setRegistro(registroRes?.data ?? null)
+        setRegistro(registroData as unknown as Record<string, unknown> ?? null)
       } catch {
         const mock = getMockDashboard(ano, mes)
         setSemaforos(mock.semaforos)

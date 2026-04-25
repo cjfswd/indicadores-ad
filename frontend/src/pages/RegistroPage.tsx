@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ClipboardList, Check, Plus, ChevronDown, ChevronRight, Loader2, X, Trash2, Calendar, Paperclip, ExternalLink, Download, Users, LayoutGrid } from 'lucide-react'
 import { clsx } from 'clsx'
-import { api } from '@/lib/api'
+import { apiClient, type EventoResponse } from '@/lib/api-client'
 import { AnexoInput } from '@/components/AnexoInput'
 import { Combobox } from '@/components/Combobox'
 import { exportarRelatorio } from '@/lib/export-report'
@@ -97,13 +97,13 @@ export function RegistroPage() {
   const fetchAll = useCallback(async () => {
     setLoading(true)
     try {
-      const [regRes, pacRes, evRes] = await Promise.all([
-        api.get(`/registros/${ano}/${mes}`).catch(() => null),
-        api.get<{ dados: PacienteLista[] }>('/pacientes?ativo=true'),
-        api.get<{ dados: EventoRegistrado[] }>(`/eventos?ano=${ano}&mes=${mes}`),
+      const [regData, pacData, evData] = await Promise.all([
+        apiClient.registros.buscarMes(ano, mes).catch(() => null),
+        apiClient.pacientes.listar({ ativo: true }),
+        apiClient.eventos.listar({ ano, mes }),
       ])
-      if (regRes) {
-        const d = regRes.data as Record<string, unknown>
+      if (regData) {
+        const d = regData as Record<string, unknown>
         setRegistroId(d.id as string)
         setStatusReg(d.status as 'rascunho' | 'confirmado')
         const vals: Valores = {}
@@ -115,8 +115,8 @@ export function RegistroPage() {
         for (const g of GRUPOS) for (const c of g.campos) vals[c.key] = 0
         setValores(vals)
       }
-      setPacientes(pacRes.data.dados as PacienteLista[])
-      setEventos(evRes.data.dados as EventoRegistrado[])
+      setPacientes(pacData.dados as PacienteLista[])
+      setEventos(evData.dados as EventoRegistrado[])
     } catch { /* silent */ } finally { setLoading(false) }
   }, [ano, mes])
 
@@ -134,8 +134,8 @@ export function RegistroPage() {
     try {
       let regId = registroId
       if (!regId) {
-        const res = await api.post('/registros', { ano, mes })
-        regId = (res.data as Record<string, unknown>).id as string
+        const created = await apiClient.registros.criar({ ano, mes })
+        regId = created.id
         setRegistroId(regId)
       }
       const fd = new FormData()
@@ -147,7 +147,7 @@ export function RegistroPage() {
       fd.append('data_evento', modalData)
       if (modalArquivo) fd.append('arquivo', modalArquivo)
 
-      await api.post('/eventos', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      await apiClient.eventos.criar(fd)
 
       await fetchAll(); setModal(null)
     } catch (err) { console.error('Erro:', err) }
@@ -160,7 +160,7 @@ export function RegistroPage() {
       const fd = new FormData()
       fd.append('justificativa', justificativaDelete)
       if (arquivoDelete) fd.append('arquivo', arquivoDelete)
-      await api.post(`/eventos/${id}/reverter`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      await apiClient.eventos.excluir(id, fd)
       await fetchAll()
     } catch (err) { console.error('Erro:', err) }
     setConfirmDeleteId(null)
@@ -170,7 +170,7 @@ export function RegistroPage() {
 
   const confirmarRegistro = async () => {
     if (!registroId) return
-    try { await api.put(`/registros/${registroId}/confirmar`); setStatusReg('confirmado') }
+    try { await apiClient.registros.confirmar(registroId); setStatusReg('confirmado') }
     catch (err) { console.error('Erro:', err) }
   }
 

@@ -1,7 +1,7 @@
 import { Target, Save, RotateCcw, Calendar } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useState, useEffect, useCallback } from 'react'
-import { api } from '@/lib/api'
+import { apiClient } from '@/lib/api-client'
 import { Combobox } from '@/components/Combobox'
 import { AnexoInput } from '@/components/AnexoInput'
 
@@ -71,13 +71,12 @@ export function MetasPage() {
 
   const fetchMetas = useCallback(async () => {
     try {
-      const res = await api.get(`/metas?ano=${ano}`)
-      const data = res.data as { dados: Array<Record<string, unknown>>; isDefault?: boolean }
+      const data = await apiClient.metas.listar(ano)
       if (data.dados.length > 0) {
         // Deduplicate by indicador_codigo — keep the most recent entry per indicator
         const byCode = new Map<string, Record<string, unknown>>()
         for (const d of data.dados) {
-          byCode.set(d.indicador_codigo as string, d)
+          byCode.set(d.indicador_codigo, d as unknown as Record<string, unknown>)
         }
         setMetas(DEFAULT_METAS.map(def => {
           const d = byCode.get(def.codigo)
@@ -135,9 +134,9 @@ export function MetasPage() {
         const fd = new FormData()
         fd.append('metas', JSON.stringify(payload))
         fd.append('arquivo', arquivoMetas)
-        await api.put('/metas', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+        await apiClient.metas.salvarComArquivo(fd)
       } else {
-        await api.put('/metas', payload)
+        await apiClient.metas.salvar(payload)
       }
       setArquivoMetas(null)
     } catch (err) {

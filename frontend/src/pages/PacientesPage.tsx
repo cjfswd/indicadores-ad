@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { Users, Plus, X, Edit3, Trash2, Save, ChevronDown, ChevronRight, Loader2, UserX, UserCheck } from 'lucide-react'
 import { clsx } from 'clsx'
-import { api } from '@/lib/api'
+import { apiClient, type PacienteResponse } from '@/lib/api-client'
 import { AnexoInput } from '@/components/AnexoInput'
 import { Combobox } from '@/components/Combobox'
 
@@ -52,17 +52,17 @@ export function PacientesPage() {
 
   const fetchPacientes = useCallback(async () => {
     try {
-      const res = await api.get<{ dados: Array<Record<string, unknown>> }>('/pacientes')
-      setPacientes(res.data.dados.map(p => ({
-        id: p.id as string,
-        nome: p.nome as string,
-        convenio: p.convenio as string,
-        modalidade: (p.modalidade ?? 'AD') as PacienteLocal['modalidade'],
-        data_nascimento: (p.data_nascimento as string) ?? null,
-        observacoes: (p.observacoes as string) ?? null,
+      const data = await apiClient.pacientes.listar()
+      setPacientes(data.dados.map((p: PacienteResponse) => ({
+        id: p.id,
+        nome: p.nome,
+        convenio: p.convenio,
+        modalidade: p.modalidade ?? 'AD',
+        data_nascimento: p.data_nascimento,
+        observacoes: p.observacoes,
         ativo: Boolean(p.ativo),
-        motivo_desativacao: (p.motivo_desativacao as string) ?? null,
-        indicador_desativacao: (p.indicador_desativacao as string) ?? null,
+        motivo_desativacao: p.motivo_desativacao,
+        indicador_desativacao: p.indicador_desativacao,
       })))
     } catch {
       setPacientes(INITIAL_DATA)
@@ -154,7 +154,7 @@ export function PacientesPage() {
 
     const payload = {
       nome: form.nome,
-      convenio: form.convenio,
+      convenio: form.convenio as 'Camperj' | 'Unimed',
       modalidade: form.modalidade,
       data_nascimento: form.data_nascimento || null,
       observacoes: form.observacoes || null,
@@ -162,9 +162,9 @@ export function PacientesPage() {
 
     try {
       if (editandoId) {
-        await api.put(`/pacientes/${editandoId}`, payload)
+        await apiClient.pacientes.editar(editandoId, payload)
       } else {
-        await api.post('/pacientes', payload)
+        await apiClient.pacientes.criar(payload)
       }
       await fetchPacientes()
       setModalAberto(false)
@@ -179,7 +179,7 @@ export function PacientesPage() {
   const excluir = async (id: string) => {
     if (!justificativaExcluir.trim()) return
     try {
-      await api.post(`/pacientes/${id}/desativar`, {
+      await apiClient.pacientes.desativar(id, {
         justificativa: justificativaExcluir,
         motivo: justificativaExcluir,
       })
@@ -195,7 +195,7 @@ export function PacientesPage() {
   const desativar = async (id: string) => {
     if (!justDesativar.trim()) return
     try {
-      await api.post(`/pacientes/${id}/desativar`, {
+      await apiClient.pacientes.desativar(id, {
         justificativa: justDesativar,
         motivo: justDesativar,
         indicador: indicadorDesativar || undefined,
@@ -209,7 +209,7 @@ export function PacientesPage() {
 
   const reativar = async (id: string) => {
     try {
-      await api.post(`/pacientes/${id}/reativar`, {})
+      await apiClient.pacientes.reativar(id)
       await fetchPacientes()
     } catch (err) {
       console.error('Erro ao reativar paciente:', err)

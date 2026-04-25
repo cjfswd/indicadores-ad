@@ -183,18 +183,36 @@ auditoriaRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res)
     entityBefore = await db.selectFrom('pacientes').selectAll().where('id', '=', entry.entidade_id).executeTakeFirst()
 
     if (entry.acao === 'criar') {
-      // Reverter criação → soft delete
+      // Reverter criação → soft delete (desativar o paciente criado)
       if (entityBefore) {
-        await db.updateTable('pacientes')
-          .set({ ativo: 0, motivo_desativacao: `Reversão: ${justificativa}`, atualizado_em: now() } as never)
-          .where('id', '=', entry.entidade_id)
-          .execute()
+        const eb = entityBefore as Record<string, unknown>
+        if (eb.ativo === 1) {
+          await db.updateTable('pacientes')
+            .set({ ativo: 0, motivo_desativacao: `Reversão de criação: ${justificativa}`, atualizado_em: now() } as never)
+            .where('id', '=', entry.entidade_id)
+            .execute()
+        }
       }
-    } else if (entry.acao === 'excluir' || entry.acao === 'desativar') {
-      // Reverter exclusão/desativação → reativar
+    } else if (entry.acao === 'desativar' || entry.acao === 'excluir') {
+      // Reverter desativação/exclusão → reativar o paciente
       if (entityBefore) {
+        // Restaurar estado anterior se disponível no payload
+        const payloadData = entry.payload ? JSON.parse(entry.payload) : null
+        const antesData = payloadData?.antes
         await db.updateTable('pacientes')
-          .set({ ativo: 1, motivo_desativacao: null, indicador_desativacao: null, atualizado_em: now() } as never)
+          .set({
+            ativo: 1,
+            motivo_desativacao: null,
+            indicador_desativacao: null,
+            // Restaurar campos se tínhamos snapshot
+            ...(antesData ? {
+              nome: antesData.nome,
+              convenio: antesData.convenio,
+              modalidade: antesData.modalidade,
+              observacoes: antesData.observacoes ?? null,
+            } : {}),
+            atualizado_em: now(),
+          } as never)
           .where('id', '=', entry.entidade_id)
           .execute()
       } else {
@@ -222,8 +240,16 @@ auditoriaRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res)
     } else if (entry.acao === 'reativar') {
       // Reverter reativação → desativar novamente
       if (entityBefore) {
+        // Restaurar motivo_desativacao do payload se disponível
+        const payloadData = entry.payload ? JSON.parse(entry.payload) : null
+        const antesData = payloadData?.antes
         await db.updateTable('pacientes')
-          .set({ ativo: 0, motivo_desativacao: `Reversão de reativação: ${justificativa}`, atualizado_em: now() } as never)
+          .set({
+            ativo: 0,
+            motivo_desativacao: antesData?.motivo_desativacao ?? `Reversão de reativação: ${justificativa}`,
+            indicador_desativacao: antesData?.indicador_desativacao ?? null,
+            atualizado_em: now(),
+          } as never)
           .where('id', '=', entry.entidade_id)
           .execute()
       }

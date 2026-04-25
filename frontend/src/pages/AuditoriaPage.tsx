@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { History, RotateCcw, Loader2, ChevronLeft, ChevronRight, X, Plus, Paperclip, ExternalLink } from 'lucide-react'
 import { clsx } from 'clsx'
-import { api } from '@/lib/api'
+import { apiClient, type AuditEntry as ApiAuditEntry } from '@/lib/api-client'
 import { AnexoInput } from '@/components/AnexoInput'
 import { Combobox } from '@/components/Combobox'
 
@@ -186,13 +186,13 @@ export function AuditoriaPage() {
   const fetchAudit = useCallback(async () => {
     setLoading(true)
     try {
-      let url = `/auditoria?pagina=${pagina}&por_pagina=20`
-      if (filtroEntidade) url += `&entidade=${filtroEntidade}`
-      if (filtroAcao) url += `&acao=${filtroAcao}`
-
-      const res = await api.get(url)
-      const data = res.data as { dados: AuditEntry[]; paginacao: { total_registros: number; total_paginas: number } }
-      setEntries(data.dados)
+      const data = await apiClient.auditoria.listar({
+        pagina,
+        por_pagina: 20,
+        entidade: filtroEntidade || undefined,
+        acao: filtroAcao || undefined,
+      })
+      setEntries(data.dados as unknown as AuditEntry[])
       setTotalPaginas(data.paginacao.total_paginas)
       setTotal(data.paginacao.total_registros)
     } catch {
@@ -212,7 +212,7 @@ export function AuditoriaPage() {
       const fd = new FormData()
       fd.append('justificativa', justificativaRevert)
       if (arquivoRevert) fd.append('arquivo', arquivoRevert)
-      await api.post(`/auditoria/${entry.id}/reverter`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      await apiClient.auditoria.reverter(entry.id, fd)
       await fetchAudit()
       setConfirmRevert(null)
       setJustificativaRevert('')
@@ -232,7 +232,7 @@ export function AuditoriaPage() {
       const fd = new FormData()
       fd.append('justificativa', justificativaReRegister)
       if (arquivoReRegister) fd.append('arquivo', arquivoReRegister)
-      await api.post(`/auditoria/${entry.id}/reverter`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      await apiClient.auditoria.reverter(entry.id, fd)
       await fetchAudit()
       setConfirmReRegister(null)
       setJustificativaReRegister('')

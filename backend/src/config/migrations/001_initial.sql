@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
   id UUID PRIMARY KEY,
   entidade TEXT NOT NULL,
   entidade_id TEXT NOT NULL,
-  acao TEXT NOT NULL CHECK(acao IN ('criar','editar','confirmar','excluir','reverter','reverter_criacao','reverter_exclusao','reverter_edicao','reverter_confirmacao','desativar','reativar')),
+  acao TEXT NOT NULL CHECK(acao IN ('criar','editar','confirmar','excluir','reverter','reverter_criacao','reverter_exclusao','reverter_edicao','reverter_confirmacao','reverter_desativacao','reverter_reativacao','desativar','reativar')),
   campo_alterado TEXT,
   valor_anterior TEXT,
   valor_novo TEXT,
