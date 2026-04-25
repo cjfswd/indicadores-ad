@@ -49,10 +49,11 @@ const INDICADORES_DESATIVACAO = [
 export function PacientesPage() {
   const [pacientes, setPacientes] = useState<PacienteLocal[]>([])
   const [loading, setLoading] = useState(true)
+  const [filtroStatus, setFiltroStatus] = useState<'ativo' | 'inativo' | 'todos'>('ativo')
 
   const fetchPacientes = useCallback(async () => {
     try {
-      const data = await apiClient.pacientes.listar()
+      const data = await apiClient.pacientes.listar({ status: filtroStatus })
       setPacientes(data.dados.map((p: PacienteResponse) => ({
         id: p.id,
         nome: p.nome,
@@ -69,7 +70,7 @@ export function PacientesPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [filtroStatus])
 
   useEffect(() => { fetchPacientes() }, [fetchPacientes])
   const [busca, setBusca] = useState('')
@@ -225,7 +226,7 @@ export function PacientesPage() {
           <div>
             <h1 className="text-lg sm:text-2xl font-bold text-[var(--color-text-primary)]">Pacientes</h1>
             <p className="text-sm text-[var(--color-text-muted)]">
-              {pacientes.filter(p => p.status === 'ativo').length} ativos · {todosConvenios.length} convênios
+              {pacientes.length} {filtroStatus === 'ativo' ? 'ativos' : filtroStatus === 'inativo' ? 'inativos' : 'pacientes'} · {todosConvenios.length} convênios
             </p>
           </div>
         </div>
@@ -258,6 +259,22 @@ export function PacientesPage() {
             emptyLabel="Todos os convênios"
           />
         </div>
+        <div className="flex gap-1 p-0.5 rounded-[var(--radius-md)] bg-[var(--color-surface-0)] border border-[var(--color-border)]">
+          {(['ativo', 'inativo', 'todos'] as const).map(s => (
+            <button
+              key={s}
+              onClick={() => setFiltroStatus(s)}
+              className={clsx(
+                'px-3 py-1.5 rounded-[var(--radius-sm)] text-xs font-medium transition-colors',
+                filtroStatus === s
+                  ? 'bg-[var(--color-accent)] text-white'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--overlay-soft)]',
+              )}
+            >
+              {s === 'ativo' ? 'Ativos' : s === 'inativo' ? 'Inativos' : 'Todos'}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Lista agrupada por Convênio */}
@@ -273,7 +290,7 @@ export function PacientesPage() {
               <span className="text-sm font-semibold text-[var(--color-accent)]">{convenio}</span>
               <span className="text-xs text-[var(--color-text-muted)] ml-1">({lista.length})</span>
               <span className="ml-auto text-xs text-[var(--color-text-muted)]">
-                {lista.filter(p => p.status === 'ativo').length} ativos
+                {lista.filter(p => p.status === 'ativo').length} ativos{lista.filter(p => p.status === 'inativo').length > 0 ? ` · ${lista.filter(p => p.status === 'inativo').length} inativos` : ''}
               </span>
             </button>
 
@@ -488,7 +505,7 @@ export function PacientesPage() {
           <div className="relative w-full max-w-sm glass-card p-6 animate-fade-in">
             <h3 className="text-base font-bold text-[var(--color-text-primary)] mb-2">Excluir paciente?</h3>
             <p className="text-sm text-[var(--color-text-muted)] mb-4">
-              Essa ação não pode ser desfeita. O paciente e todos os seus eventos serão removidos permanentemente.
+              O paciente será removido das listagens. Esta ação pode ser revertida via audit log.
             </p>
             <label className="flex flex-col gap-1.5 mb-4">
               <span className="text-xs text-[var(--color-text-muted)] font-medium">Justificativa *</span>
