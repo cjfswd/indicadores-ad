@@ -8,7 +8,7 @@ export interface UsuarioTable {
   email: string
   google_sub: string | null
   perfil: 'admin' | 'editor' | 'visualizador'
-  ativo: Generated<number>
+  ativo: Generated<boolean>
   criado_em: Generated<string>
   ultimo_login: string | null
   ultimo_ip: string | null
@@ -58,7 +58,7 @@ export interface PacienteTable {
   convenio: 'Camperj' | 'Unimed'
   modalidade: 'AD' | 'ID'
   observacoes: string | null
-  ativo: Generated<number>
+  ativo: Generated<boolean>
   motivo_desativacao: string | null
   indicador_desativacao: string | null
   criado_por: string | null
@@ -79,7 +79,7 @@ export interface EventoPacienteTable {
   documentacao_url: string | null
   descricao: string | null
   registrado_por: string | null
-  ativo: Generated<number>
+  ativo: Generated<boolean>
   criado_em: Generated<string>
 }
 
@@ -119,7 +119,7 @@ export interface AuditLogTable {
   justificativa: string | null
   documentacao_url: string | null
   payload: string | null
-  revertido: Generated<number>
+  revertido: Generated<boolean>
   revertido_por: string | null
   reverte_ref: string | null
 }

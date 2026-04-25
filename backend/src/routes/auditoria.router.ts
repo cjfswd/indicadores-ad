@@ -126,11 +126,11 @@ auditoriaRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res)
         .executeTakeFirst()
 
       if (entityBefore) {
-        const ev = entityBefore as { tipo_evento: string; ano: number; mes: number; ativo: number }
-        if (ev.ativo === 1) {
+        const ev = entityBefore as { tipo_evento: string; ano: number; mes: number; ativo: boolean }
+        if (ev.ativo === true) {
           await incrementarMetrica(db, ev.tipo_evento, ev.ano, ev.mes, -1)
           await db.updateTable('eventos_pacientes')
-            .set({ ativo: 0 })
+            .set({ ativo: false })
             .where('id', '=', entry.entidade_id)
             .execute()
         }
@@ -142,10 +142,10 @@ auditoriaRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res)
 
       if (entityBefore) {
         // Reativar evento soft-deleted
-        const ev = entityBefore as { tipo_evento: string; ano: number; mes: number; ativo: number }
-        if (ev.ativo === 0) {
+        const ev = entityBefore as { tipo_evento: string; ano: number; mes: number; ativo: boolean }
+        if (ev.ativo === false) {
           await db.updateTable('eventos_pacientes')
-            .set({ ativo: 1 })
+            .set({ ativo: true })
             .where('id', '=', entry.entidade_id)
             .execute()
           await incrementarMetrica(db, ev.tipo_evento, ev.ano ?? ano, ev.mes ?? mes, 1)
@@ -186,9 +186,9 @@ auditoriaRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res)
       // Reverter criação → soft delete (desativar o paciente criado)
       if (entityBefore) {
         const eb = entityBefore as Record<string, unknown>
-        if (eb.ativo === 1) {
+        if (eb.ativo === true) {
           await db.updateTable('pacientes')
-            .set({ ativo: 0, motivo_desativacao: `Reversão de criação: ${justificativa}`, atualizado_em: now() } as never)
+            .set({ ativo: false, motivo_desativacao: `Reversão de criação: ${justificativa}`, atualizado_em: now() } as never)
             .where('id', '=', entry.entidade_id)
             .execute()
         }
@@ -201,7 +201,7 @@ auditoriaRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res)
         const antesData = payloadData?.antes
         await db.updateTable('pacientes')
           .set({
-            ativo: 1,
+            ativo: true,
             motivo_desativacao: null,
             indicador_desativacao: null,
             // Restaurar campos se tínhamos snapshot
@@ -245,7 +245,7 @@ auditoriaRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res)
         const antesData = payloadData?.antes
         await db.updateTable('pacientes')
           .set({
-            ativo: 0,
+            ativo: false,
             motivo_desativacao: antesData?.motivo_desativacao ?? `Reversão de reativação: ${justificativa}`,
             indicador_desativacao: antesData?.indicador_desativacao ?? null,
             atualizado_em: now(),
@@ -360,7 +360,7 @@ auditoriaRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res)
 
   // Marcar entrada original como revertida
   await db.updateTable('audit_log')
-    .set({ revertido: 1, revertido_por: reversalId })
+    .set({ revertido: true, revertido_por: reversalId })
     .where('id', '=', entry.id)
     .execute()
 

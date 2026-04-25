@@ -36,7 +36,7 @@ eventosRouter.get('/', async (req, res) => {
       'e.documentacao_url', 'e.descricao', 'e.registrado_por', 'e.ativo', 'e.criado_em',
       'p.nome as paciente_nome', 'p.convenio as paciente_convenio', 'p.modalidade as paciente_modalidade',
     ])
-    .where('e.ativo', '=', 1) // só eventos ativos
+    .where('e.ativo', '=', true) // só eventos ativos
 
   if (req.query.ano) query = query.where('e.ano', '=', Number(req.query.ano))
   if (req.query.mes) query = query.where('e.mes', '=', Number(req.query.mes))
@@ -57,7 +57,7 @@ eventosRouter.post('/', upload.single('arquivo'), async (req, res) => {
     return
   }
 
-  const paciente = await db.selectFrom('pacientes').select('id').where('id', '=', paciente_id).where('ativo', '=', 1).executeTakeFirst()
+  const paciente = await db.selectFrom('pacientes').select('id').where('id', '=', paciente_id).where('ativo', '=', true).executeTakeFirst()
   if (!paciente) throw new NotFoundError('Paciente', paciente_id)
 
   const id = uuid()
@@ -120,7 +120,7 @@ async function softDeleteEvento(id: string, justificativa: string, arquivoUrl: s
       'p.nome as paciente_nome', 'p.convenio as paciente_convenio',
     ])
     .where('e.id', '=', id)
-    .where('e.ativo', '=', 1)
+    .where('e.ativo', '=', true)
     .executeTakeFirst()
 
   if (!eventoFull) throw new NotFoundError('Evento', id)
@@ -133,7 +133,7 @@ async function softDeleteEvento(id: string, justificativa: string, arquivoUrl: s
 
   // Soft delete
   await db.updateTable('eventos_pacientes')
-    .set({ ativo: 0 })
+    .set({ ativo: false })
     .where('id', '=', id)
     .execute()
 
@@ -215,7 +215,7 @@ eventosRouter.post('/re-registrar', upload.single('arquivo'), async (req, res) =
     .selectFrom('eventos_pacientes')
     .selectAll()
     .where('id', '=', auditEntry.entidade_id)
-    .where('ativo', '=', 0)
+    .where('ativo', '=', false)
     .executeTakeFirst()
 
   const tipoEvento = auditEntry.campo_alterado
@@ -228,7 +228,7 @@ eventosRouter.post('/re-registrar', upload.single('arquivo'), async (req, res) =
   if (existing) {
     // Reativar o evento soft-deleted
     await db.updateTable('eventos_pacientes')
-      .set({ ativo: 1 })
+      .set({ ativo: true })
       .where('id', '=', existing.id)
       .execute()
 

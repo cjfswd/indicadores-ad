@@ -16,8 +16,8 @@ pacientesRouter.get('/', async (req, res) => {
   let query = db.selectFrom('pacientes').selectAll()
 
   if (req.query.convenio) query = query.where('convenio', '=', req.query.convenio as 'Camperj' | 'Unimed')
-  if (req.query.ativo !== undefined) query = query.where('ativo', '=', req.query.ativo === 'true' ? 1 : 0)
-  else query = query.where('ativo', '=', 1) // default: só ativos
+  if (req.query.ativo !== undefined) query = query.where('ativo', '=', req.query.ativo === 'true')
+  else query = query.where('ativo', '=', true) // default: só ativos
   if (req.query.busca) query = query.where('nome', 'like', `%${req.query.busca}%`)
 
   const rows = await query.orderBy('convenio').orderBy('nome').execute()
@@ -39,7 +39,7 @@ pacientesRouter.get('/convenios', async (_req, res) => {
     .selectFrom('pacientes')
     .select('convenio')
     .distinct()
-    .where('ativo', '=', 1)
+    .where('ativo', '=', true)
     .orderBy('convenio')
     .execute()
   res.json(rows.map(r => r.convenio))
@@ -130,7 +130,7 @@ async function desativarPaciente(id: string, body: { justificativa?: string; mot
 
   await db.updateTable('pacientes')
     .set({
-      ativo: 0,
+      ativo: false,
       motivo_desativacao: body.motivo ?? null,
       indicador_desativacao: body.indicador ?? null,
       atualizado_em: now(),
@@ -163,7 +163,7 @@ async function reativarPaciente(id: string, body: { justificativa?: string }, re
 
   await db.updateTable('pacientes')
     .set({
-      ativo: 1,
+      ativo: true,
       motivo_desativacao: null,
       indicador_desativacao: null,
       atualizado_em: now(),

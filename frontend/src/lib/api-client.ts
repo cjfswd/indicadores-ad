@@ -11,7 +11,7 @@ export interface PacienteResponse {
   convenio: 'Camperj' | 'Unimed'
   modalidade: 'AD' | 'ID'
   observacoes: string | null
-  ativo: number
+  ativo: boolean
   motivo_desativacao: string | null
   indicador_desativacao: string | null
   criado_por: string | null
@@ -38,7 +38,7 @@ export interface EventoResponse {
   documentacao_url: string | null
   descricao: string | null
   registrado_por: string | null
-  ativo: number
+  ativo: boolean
   criado_em: string
   paciente_nome: string | null
   paciente_convenio: string | null
@@ -136,7 +136,7 @@ export interface AuditEntry {
   justificativa: string | null
   documentacao_url: string | null
   payload: string | null
-  revertido: number
+  revertido: boolean
   revertido_por: string | null
   reverte_ref: string | null
 }

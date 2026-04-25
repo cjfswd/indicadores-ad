@@ -1,12 +1,9 @@
 import { sql, type RawBuilder } from 'kysely'
-import { isProduction } from '../config/database.js'
 
 /**
- * Returns the SQL expression for "current timestamp" compatible with both
- * SQLite (datetime('now')) and PostgreSQL (NOW()).
+ * Returns the SQL expression for "current timestamp".
+ * Now always PostgreSQL — no more dual-dialect branching.
  */
 export function now(): RawBuilder<string> {
-  return isProduction()
-    ? sql<string>`NOW()`
-    : sql<string>`datetime('now')`
+  return sql<string>`NOW()`
 }
