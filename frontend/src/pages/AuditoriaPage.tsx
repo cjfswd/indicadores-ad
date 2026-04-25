@@ -245,20 +245,25 @@ export function AuditoriaPage() {
     }
   }
 
-  // Pode reverter criação de qualquer entidade (se não já revertido)
+  // Pode reverter criação (soft delete)
   const canRevert = (entry: AuditEntry) =>
     entry.acao === 'criar' && !entry.revertido
 
-  // Pode re-registrar exclusões de qualquer entidade (se não já revertido)
+  // Pode re-registrar exclusões / desativações (reativar)
   const canReRegister = (entry: AuditEntry) =>
-    entry.acao === 'excluir' && !entry.revertido
+    (entry.acao === 'excluir' || entry.acao === 'desativar') && !entry.revertido
 
-  // Pode reverter edições (se não já revertido)
+  // Pode reverter edições — aceita valor_anterior OU payload com snapshot
   const canRevertEdit = (entry: AuditEntry) =>
-    entry.acao === 'editar' && !entry.revertido && !!entry.valor_anterior
+    entry.acao === 'editar' && !entry.revertido && !!(entry.valor_anterior || entry.payload)
 
+  // Pode reverter confirmação
   const canRevertConfirm = (entry: AuditEntry) =>
     entry.acao === 'confirmar' && !entry.revertido
+
+  // Pode reverter reativação (desativar novamente)
+  const canRevertReativar = (entry: AuditEntry) =>
+    entry.acao === 'reativar' && !entry.revertido
 
   const getDescription = (entry: AuditEntry) => {
     const tipo = entry.campo_alterado ? (TIPO_EVENTO_LABELS[entry.campo_alterado] ?? entry.campo_alterado) : null
@@ -289,14 +294,16 @@ export function AuditoriaPage() {
       if (entry.acao === 'editar') return (<>Editou <span className="font-semibold text-amber-400">registro mensal{periodo}</span></>)
     }
     if (entry.entidade === 'paciente') {
-      const pacNome = (() => { try { const p = entry.payload ? JSON.parse(entry.payload) : null; return p?.antes?.nome ?? p?.depois?.nome ?? p?.nome ?? entry.valor_novo } catch { return entry.valor_novo } })()
+      const pacNome = (() => { try { const p = entry.payload ? JSON.parse(entry.payload) : null; return p?.antes?.nome ?? p?.depois?.nome ?? p?.nome ?? entry.valor_anterior ?? entry.valor_novo } catch { return entry.valor_novo } })()
       if (entry.acao === 'criar') return (<>Cadastrou paciente <span className="font-semibold text-[var(--color-text-primary)]">{pacNome}</span></>)
       if (entry.acao === 'editar') return (<>Editou paciente <span className="font-semibold text-[var(--color-text-primary)]">{pacNome}</span></>)
-      if (entry.acao === 'excluir' && entry.valor_anterior?.includes('ativo=')) {
-        const novoAtivo = entry.valor_novo?.includes('ativo=0')
-        return (<>{novoAtivo ? 'Desativou' : 'Reativou'} paciente <span className="font-semibold text-amber-400">{pacNome}</span></>)
-      }
+      if (entry.acao === 'desativar') return (<>Desativou paciente <span className="font-semibold text-amber-400">{pacNome}</span></>)
+      if (entry.acao === 'reativar') return (<>Reativou paciente <span className="font-semibold text-teal-400">{pacNome}</span></>)
       if (entry.acao === 'excluir') return (<>Excluiu paciente <span className="font-semibold text-red-400">{pacNome}</span></>)
+      if (entry.acao === 'reverter_criacao') return (<>Reverteu criação de paciente <span className="font-semibold text-orange-400">{pacNome}</span></>)
+      if (entry.acao === 'reverter_exclusao' || entry.acao === 'reverter_desativacao') return (<>Reverteu desativação de paciente <span className="font-semibold text-teal-400">{pacNome}</span> — reativado</>)
+      if (entry.acao === 'reverter_reativacao') return (<>Reverteu reativação de paciente <span className="font-semibold text-amber-400">{pacNome}</span> — desativado novamente</>)
+      if (entry.acao === 'reverter_edicao') return (<>Reverteu edição de paciente <span className="font-semibold text-violet-400">{pacNome}</span></>)
       if (entry.acao === 'reverter') return (<>Reverteu exclusão de paciente <span className="font-semibold text-orange-400">{pacNome}</span></>)
     }
     if (entry.entidade === 'meta') {
@@ -535,7 +542,7 @@ export function AuditoriaPage() {
                   </details>
 
                   {/* Ações — apenas se NÃO foi revertido */}
-                  {!entry.revertido && (canRevert(entry) || canReRegister(entry) || canRevertEdit(entry) || canRevertConfirm(entry)) && (
+                  {!entry.revertido && (canRevert(entry) || canReRegister(entry) || canRevertEdit(entry) || canRevertConfirm(entry) || canRevertReativar(entry)) && (
                     <div className="mt-3 pt-2 border-t border-[var(--overlay-border)] flex gap-2 flex-wrap">
                       {canRevert(entry) && (
                         <button onClick={() => { setConfirmRevert(entry); setJustificativaRevert('') }}
@@ -544,9 +551,9 @@ export function AuditoriaPage() {
                         </button>
                       )}
                       {canReRegister(entry) && (
-                        <button onClick={() => setConfirmReRegister(entry)}
+                        <button onClick={() => { setConfirmRevert(entry); setJustificativaRevert('') }}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-medium text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors border border-emerald-500/20">
-                          <Plus size={12} /> Re-registrar
+                          <RotateCcw size={12} /> Reverter {entry.acao === 'desativar' ? '(reativar)' : '(re-registrar)'}
                         </button>
                       )}
                       {canRevertConfirm(entry) && (
@@ -559,6 +566,12 @@ export function AuditoriaPage() {
                         <button onClick={() => { setConfirmRevert(entry); setJustificativaRevert('') }}
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-medium text-violet-400 bg-violet-500/10 hover:bg-violet-500/20 transition-colors border border-violet-500/20">
                           <RotateCcw size={12} /> Reverter edição
+                        </button>
+                      )}
+                      {canRevertReativar(entry) && (
+                        <button onClick={() => { setConfirmRevert(entry); setJustificativaRevert('') }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-medium text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 transition-colors border border-amber-500/20">
+                          <RotateCcw size={12} /> Reverter reativação
                         </button>
                       )}
                     </div>
