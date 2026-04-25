@@ -179,11 +179,9 @@ export function PacientesPage() {
   const excluir = async (id: string) => {
     if (!justificativaExcluir.trim()) return
     try {
-      await api.delete(`/pacientes/${id}`, {
-        data: {
-          justificativa: justificativaExcluir,
-          motivo: justificativaExcluir,
-        },
+      await api.post(`/pacientes/${id}/desativar`, {
+        justificativa: justificativaExcluir,
+        motivo: justificativaExcluir,
       })
       await fetchPacientes()
     } catch (err) {
@@ -197,12 +195,10 @@ export function PacientesPage() {
   const desativar = async (id: string) => {
     if (!justDesativar.trim()) return
     try {
-      await api.delete(`/pacientes/${id}`, {
-        data: {
-          justificativa: justDesativar,
-          motivo: justDesativar,
-          indicador: indicadorDesativar || undefined,
-        },
+      await api.post(`/pacientes/${id}/desativar`, {
+        justificativa: justDesativar,
+        motivo: justDesativar,
+        indicador: indicadorDesativar || undefined,
       })
       await fetchPacientes()
     } catch (err) {
@@ -213,7 +209,7 @@ export function PacientesPage() {
 
   const reativar = async (id: string) => {
     try {
-      await api.put(`/pacientes/${id}/reativar`, {})
+      await api.post(`/pacientes/${id}/reativar`, {})
       await fetchPacientes()
     } catch (err) {
       console.error('Erro ao reativar paciente:', err)

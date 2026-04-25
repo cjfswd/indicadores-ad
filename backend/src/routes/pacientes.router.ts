@@ -1,23 +1,15 @@
 import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
-import { sql } from 'kysely'
 import { now } from '../lib/sql-helpers.js'
 import { validate } from '../middleware/validate.middleware.js'
 import { pacienteSchema, type Paciente } from '@indicadores/shared'
 import { NotFoundError } from '../errors/app-error.js'
 import { getKysely } from '../config/database.js'
 import { getRequestEmail } from '../lib/request-user.js'
-import multer from 'multer'
-import path from 'path'
 
 export const pacientesRouter = Router()
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, 'uploads'),
-  filename: (_req, file, cb) => cb(null, `${uuid()}${path.extname(file.originalname)}`),
-})
-const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } })
-
+// ── GET / — listar pacientes ──
 pacientesRouter.get('/', async (req, res) => {
   const db = getKysely()
 
@@ -40,6 +32,7 @@ pacientesRouter.get('/', async (req, res) => {
   res.json({ dados: rows, agrupado, total: rows.length })
 })
 
+// ── GET /convenios ──
 pacientesRouter.get('/convenios', async (_req, res) => {
   const db = getKysely()
   const rows = await db
@@ -52,6 +45,7 @@ pacientesRouter.get('/convenios', async (_req, res) => {
   res.json(rows.map(r => r.convenio))
 })
 
+// ── GET /:id ──
 pacientesRouter.get('/:id', async (req, res) => {
   const db = getKysely()
   const row = await db.selectFrom('pacientes').selectAll().where('id', '=', req.params.id).executeTakeFirst()
@@ -99,7 +93,6 @@ pacientesRouter.put('/:id', validate(pacienteSchema), async (req, res) => {
   const antes = await db.selectFrom('pacientes').selectAll().where('id', '=', id).executeTakeFirst()
   if (!antes) throw new NotFoundError('Paciente', id)
 
-
   await db.updateTable('pacientes')
     .set({
       nome, data_nascimento: data_nascimento ?? null,
@@ -128,24 +121,18 @@ pacientesRouter.put('/:id', validate(pacienteSchema), async (req, res) => {
   res.json(depois)
 })
 
-// ── DELETE /:id — Soft delete (desativar) ──
-pacientesRouter.delete('/:id', async (req, res) => {
+// ── Shared: desativar logic ──
+async function desativarPaciente(id: string, body: { justificativa?: string; motivo?: string; indicador?: string }, req: import('express').Request) {
   const db = getKysely()
-  const { id } = req.params
-  const { justificativa, motivo, indicador } = req.body as {
-    justificativa?: string; motivo?: string; indicador?: string
-  }
 
   const antes = await db.selectFrom('pacientes').selectAll().where('id', '=', id).executeTakeFirst()
   if (!antes) throw new NotFoundError('Paciente', id)
 
-
-
   await db.updateTable('pacientes')
     .set({
       ativo: 0,
-      motivo_desativacao: motivo ?? null,
-      indicador_desativacao: indicador ?? null,
+      motivo_desativacao: body.motivo ?? null,
+      indicador_desativacao: body.indicador ?? null,
       atualizado_em: now(),
     })
     .where('id', '=', id)
@@ -157,29 +144,22 @@ pacientesRouter.delete('/:id', async (req, res) => {
     entidade_id: id,
     acao: 'desativar',
     usuario_email: getRequestEmail(req),
-    justificativa: justificativa || null,
+    justificativa: body.justificativa || null,
     valor_anterior: antes.nome,
     documentacao_url: null,
-    payload: JSON.stringify({ antes, motivo, indicador }),
+    payload: JSON.stringify({ antes, motivo: body.motivo, indicador: body.indicador }),
   }).execute()
 
-  res.json({ message: 'Paciente desativado', id })
-})
+  return { message: 'Paciente desativado', id }
+}
 
-// ── PUT /:id/reativar ──
-pacientesRouter.put('/:id/reativar', async (req, res) => {
+// ── Shared: reativar logic ──
+async function reativarPaciente(id: string, body: { justificativa?: string }, req: import('express').Request) {
   const db = getKysely()
-  const { id } = req.params
-  const { justificativa } = req.body as { justificativa?: string }
 
   const antes = await db.selectFrom('pacientes').selectAll().where('id', '=', id).executeTakeFirst()
   if (!antes) throw new NotFoundError('Paciente', id)
-  if (antes.ativo) {
-    res.status(400).json({ error: 'Paciente já está ativo' })
-    return
-  }
-
-
+  if (antes.ativo) throw new Error('Paciente já está ativo')
 
   await db.updateTable('pacientes')
     .set({
@@ -199,13 +179,53 @@ pacientesRouter.put('/:id/reativar', async (req, res) => {
     entidade_id: id,
     acao: 'reativar',
     usuario_email: getRequestEmail(req),
-    justificativa: justificativa || null,
+    justificativa: body.justificativa || null,
     valor_novo: antes.nome,
     documentacao_url: null,
     payload: JSON.stringify({ antes, depois }),
   }).execute()
 
-  res.json(depois)
+  return depois
+}
+
+// ── POST /:id/desativar — Primary desativar route (proxy-safe, body always works) ──
+pacientesRouter.post('/:id/desativar', async (req, res) => {
+  const result = await desativarPaciente(req.params.id, req.body ?? {}, req)
+  res.json(result)
+})
+
+// ── DELETE /:id — Alias for desativar (backwards compat) ──
+pacientesRouter.delete('/:id', async (req, res) => {
+  const result = await desativarPaciente(req.params.id, req.body ?? {}, req)
+  res.json(result)
+})
+
+// ── POST /:id/reativar — Primary reativar route (proxy-safe) ──
+pacientesRouter.post('/:id/reativar', async (req, res) => {
+  try {
+    const result = await reativarPaciente(req.params.id, req.body ?? {}, req)
+    res.json(result)
+  } catch (err) {
+    if (err instanceof Error && err.message === 'Paciente já está ativo') {
+      res.status(400).json({ error: err.message })
+      return
+    }
+    throw err
+  }
+})
+
+// ── PUT /:id/reativar — Alias (backwards compat) ──
+pacientesRouter.put('/:id/reativar', async (req, res) => {
+  try {
+    const result = await reativarPaciente(req.params.id, req.body ?? {}, req)
+    res.json(result)
+  } catch (err) {
+    if (err instanceof Error && err.message === 'Paciente já está ativo') {
+      res.status(400).json({ error: err.message })
+      return
+    }
+    throw err
+  }
 })
 
 // ── PUT /:id/transferir — Transferir paciente de convênio ──
@@ -216,8 +236,6 @@ pacientesRouter.put('/:id/transferir', async (req, res) => {
 
   const antes = await db.selectFrom('pacientes').selectAll().where('id', '=', id).executeTakeFirst()
   if (!antes) throw new NotFoundError('Paciente', id)
-
-
 
   await db.updateTable('pacientes')
     .set({ convenio, atualizado_em: now() })
