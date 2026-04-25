@@ -58,7 +58,7 @@ function getActivePreset(ini: number, fim: number): string | null {
   )?.label ?? null
 }
 
-export function MetasPage() {
+export function MetasPage({ serverData }: { serverData?: { metas: Record<string, unknown>[]; ano: number } }) {
   const now = new Date()
   const [ano, setAno] = useState(now.getFullYear())
   const [metas, setMetas] = useState<MetaItem[]>(DEFAULT_METAS)

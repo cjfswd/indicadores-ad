@@ -46,12 +46,32 @@ const INDICADORES_DESATIVACAO = [
   { codigo: '04', nome: 'Óbito' },
 ] as const
 
-export function PacientesPage() {
-  const [pacientes, setPacientes] = useState<PacienteLocal[]>([])
-  const [loading, setLoading] = useState(true)
+interface PacientesServerData {
+  dados: PacienteLocal[]
+  agrupado: Record<string, PacienteLocal[]>
+  total: number
+}
+
+export function PacientesPage({ serverData }: { serverData?: PacientesServerData }) {
+  const initialPacientes: PacienteLocal[] = serverData?.dados.map((p) => ({
+    id: p.id,
+    nome: p.nome,
+    convenio: p.convenio,
+    modalidade: p.modalidade ?? 'AD',
+    data_nascimento: p.data_nascimento,
+    observacoes: p.observacoes,
+    status: p.status,
+    motivo_desativacao: p.motivo_desativacao,
+    indicador_desativacao: p.indicador_desativacao,
+  })) ?? []
+
+  const [pacientes, setPacientes] = useState<PacienteLocal[]>(initialPacientes)
+  const [loading, setLoading] = useState(!serverData)
   const [filtroStatus, setFiltroStatus] = useState<'ativo' | 'inativo' | 'todos'>('ativo')
 
   const fetchPacientes = useCallback(async () => {
+    // Skip if serverData matches current filter
+    if (serverData && filtroStatus === 'ativo' && pacientes === initialPacientes) return
     try {
       const data = await apiClient.pacientes.listar({ status: filtroStatus })
       setPacientes(data.dados.map((p: PacienteResponse) => ({
@@ -66,7 +86,7 @@ export function PacientesPage() {
         indicador_desativacao: p.indicador_desativacao,
       })))
     } catch {
-      setPacientes(INITIAL_DATA)
+      if (!serverData) setPacientes(INITIAL_DATA)
     } finally {
       setLoading(false)
     }

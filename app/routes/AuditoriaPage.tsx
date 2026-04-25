@@ -159,12 +159,12 @@ function formatTimestamp(ts: string) {
   return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-export function AuditoriaPage() {
-  const [entries, setEntries] = useState<AuditEntry[]>([])
-  const [loading, setLoading] = useState(true)
+export function AuditoriaPage({ serverData }: { serverData?: { logs: AuditEntry[]; total: number } }) {
+  const [entries, setEntries] = useState<AuditEntry[]>(serverData?.logs ?? [])
+  const [loading, setLoading] = useState(!serverData)
   const [pagina, setPagina] = useState(1)
-  const [totalPaginas, setTotalPaginas] = useState(1)
-  const [total, setTotal] = useState(0)
+  const [totalPaginas, setTotalPaginas] = useState(serverData ? Math.ceil((serverData.total || 1) / 20) : 1)
+  const [total, setTotal] = useState(serverData?.total ?? 0)
 
   // Filtros
   const [filtroEntidade, setFiltroEntidade] = useState('')

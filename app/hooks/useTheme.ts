@@ -4,11 +4,15 @@ type Theme = 'light' | 'dark' | 'system'
 
 const STORAGE_KEY = 'indicadores-theme'
 
+const isClient = typeof window !== 'undefined'
+
 function getSystemTheme(): 'light' | 'dark' {
+  if (!isClient) return 'dark'
   return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
 }
 
 function applyTheme(theme: Theme) {
+  if (!isClient) return
   const root = document.documentElement
   const resolved = theme === 'system' ? getSystemTheme() : theme
 
@@ -23,13 +27,14 @@ function applyTheme(theme: Theme) {
 
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>(() => {
+    if (!isClient) return 'system'
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
     return stored ?? 'system'
   })
 
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t)
-    localStorage.setItem(STORAGE_KEY, t)
+    if (isClient) localStorage.setItem(STORAGE_KEY, t)
     applyTheme(t)
   }, [])
 

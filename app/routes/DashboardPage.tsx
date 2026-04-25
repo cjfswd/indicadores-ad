@@ -19,13 +19,27 @@ interface SemaforoApiItem {
   variacao: number | null
 }
 
-export function DashboardPage() {
+interface DashboardServerData {
+  semaforo: { ano: number; mes: number; indicadores: SemaforoApiItem[] }
+  registro: Record<string, unknown> | null
+  ano: number
+  mes: number
+}
+
+export function DashboardPage({ serverData }: { serverData?: DashboardServerData }) {
   const now = new Date()
-  const [ano, setAno] = useState(now.getFullYear())
-  const [mes, setMes] = useState(now.getMonth() + 1)
-  const [semaforos, setSemaforos] = useState<SemaforoItem[]>([])
-  const [registro, setRegistro] = useState<Record<string, unknown> | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [ano, setAno] = useState(serverData?.ano ?? now.getFullYear())
+  const [mes, setMes] = useState(serverData?.mes ?? (now.getMonth() + 1))
+
+  const initialSemaforos: SemaforoItem[] = serverData?.semaforo?.indicadores.map((s) => ({
+    ...s,
+    unidade: s.codigo === '01' || s.codigo === '03' || s.codigo === '05' ? '%' as const : 'abs' as const,
+    subtipos: [],
+  })) ?? []
+
+  const [semaforos, setSemaforos] = useState<SemaforoItem[]>(initialSemaforos)
+  const [registro, setRegistro] = useState<Record<string, unknown> | null>(serverData?.registro ?? null)
+  const [loading, setLoading] = useState(!serverData)
   const [exporting, setExporting] = useState(false)
 
   // Date range filter
@@ -33,7 +47,11 @@ export function DashboardPage() {
   const [rangeInicio, setRangeInicio] = useState(`${ano}-01`)
   const [rangeFim, setRangeFim] = useState(`${ano}-${String(mes).padStart(2, '0')}`)
 
+  // Client-side fetch only when user changes period (not on initial load with serverData)
   useEffect(() => {
+    // Skip initial fetch if we have server data for this period
+    if (serverData && ano === serverData.ano && mes === serverData.mes) return
+
     async function fetchData() {
       setLoading(true)
       try {
@@ -58,7 +76,7 @@ export function DashboardPage() {
       }
     }
     fetchData()
-  }, [ano, mes])
+  }, [ano, mes, serverData])
 
   const pacientesTotal = Number(registro?.pacientes_total ?? 0)
   const pacientesAD = Number(registro?.pacientes_ad ?? 0)

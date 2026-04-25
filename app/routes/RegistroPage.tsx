@@ -57,7 +57,7 @@ function formatDate(d: string) {
   return `${day}/${m}/${y}`
 }
 
-export function RegistroPage() {
+export function RegistroPage({ serverData }: { serverData?: { dados: Record<string, unknown>[]; ano: number } }) {
   const now = new Date()
   const [ano, setAno] = useState(now.getFullYear())
   const [mes, setMes] = useState(now.getMonth() + 1)
