@@ -35,6 +35,8 @@ const ACAO_STYLES: Record<string, string> = {
   reverter_confirmacao: 'bg-sky-500/15 text-sky-400',
   desativar: 'bg-amber-500/15 text-amber-400',
   reativar: 'bg-teal-500/15 text-teal-400',
+  reverter_desativacao: 'bg-teal-500/15 text-teal-400',
+  reverter_reativacao: 'bg-amber-500/15 text-amber-400',
 }
 
 const ACAO_DOT: Record<string, string> = {
@@ -49,6 +51,8 @@ const ACAO_DOT: Record<string, string> = {
   reverter_confirmacao: 'bg-sky-500',
   desativar: 'bg-amber-500',
   reativar: 'bg-teal-500',
+  reverter_desativacao: 'bg-teal-500',
+  reverter_reativacao: 'bg-amber-500',
 }
 
 const ENTIDADE_LABELS: Record<string, string> = {

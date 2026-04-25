@@ -186,21 +186,16 @@ auditoriaRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res)
       // Reverter criação → soft delete
       if (entityBefore) {
         await db.updateTable('pacientes')
-          .set({ ativo: 0, atualizado_em: now() } as never)
+          .set({ ativo: 0, motivo_desativacao: `Reversão: ${justificativa}`, atualizado_em: now() } as never)
           .where('id', '=', entry.entidade_id)
           .execute()
       }
-    } else if (entry.acao === 'excluir') {
+    } else if (entry.acao === 'excluir' || entry.acao === 'desativar') {
+      // Reverter exclusão/desativação → reativar
       if (entityBefore) {
-        // Paciente existe (soft-deleted) → reativar
         await db.updateTable('pacientes')
-          .set({ ativo: 1, atualizado_em: now() } as never)
+          .set({ ativo: 1, motivo_desativacao: null, indicador_desativacao: null, atualizado_em: now() } as never)
           .where('id', '=', entry.entidade_id)
-          .execute()
-        // Reativar eventos do paciente
-        await db.updateTable('eventos_pacientes')
-          .set({ ativo: 1 })
-          .where('paciente_id', '=', entry.entidade_id)
           .execute()
       } else {
         // Paciente totalmente perdido → re-inserir usando payload
@@ -215,20 +210,46 @@ auditoriaRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res)
             modalidade: pacData.modalidade ?? 'AD',
             observacoes: pacData.observacoes ?? null,
           }).execute()
-        } else if (entry.valor_novo) {
+        } else if (entry.valor_anterior || entry.valor_novo) {
           await db.insertInto('pacientes').values({
             id: entry.entidade_id,
-            nome: entry.valor_novo,
+            nome: (entry.valor_anterior || entry.valor_novo) as string,
             convenio: 'Camperj',
             modalidade: 'AD',
           }).execute()
         }
       }
-    } else if (entry.acao === 'editar' && entry.valor_anterior) {
-      await db.updateTable('pacientes')
-        .set({ nome: entry.valor_anterior, atualizado_em: now() } as never)
-        .where('id', '=', entry.entidade_id)
-        .execute()
+    } else if (entry.acao === 'reativar') {
+      // Reverter reativação → desativar novamente
+      if (entityBefore) {
+        await db.updateTable('pacientes')
+          .set({ ativo: 0, motivo_desativacao: `Reversão de reativação: ${justificativa}`, atualizado_em: now() } as never)
+          .where('id', '=', entry.entidade_id)
+          .execute()
+      }
+    } else if (entry.acao === 'editar') {
+      // Reverter edição → restaurar snapshot anterior completo do payload
+      const payloadData = entry.payload ? JSON.parse(entry.payload) : null
+      const antes = payloadData?.antes
+      if (antes && entityBefore) {
+        await db.updateTable('pacientes')
+          .set({
+            nome: antes.nome ?? (entityBefore as Record<string, unknown>).nome,
+            data_nascimento: antes.data_nascimento ?? null,
+            convenio: antes.convenio ?? (entityBefore as Record<string, unknown>).convenio,
+            modalidade: antes.modalidade ?? (entityBefore as Record<string, unknown>).modalidade,
+            observacoes: antes.observacoes ?? null,
+            atualizado_em: now(),
+          } as never)
+          .where('id', '=', entry.entidade_id)
+          .execute()
+      } else if (entry.valor_anterior && entityBefore) {
+        // Fallback: só tem valor_anterior (nome antigo)
+        await db.updateTable('pacientes')
+          .set({ nome: entry.valor_anterior, atualizado_em: now() } as never)
+          .where('id', '=', entry.entidade_id)
+          .execute()
+      }
     }
 
     entityAfter = await db.selectFrom('pacientes').selectAll().where('id', '=', entry.entidade_id).executeTakeFirst()
@@ -281,6 +302,8 @@ auditoriaRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res)
   const reversalId = uuid()
   const acaoRevertida = entry.acao === 'criar' ? 'reverter_criacao' as const
     : entry.acao === 'excluir' ? 'reverter_exclusao' as const
+    : entry.acao === 'desativar' ? 'reverter_desativacao' as const
+    : entry.acao === 'reativar' ? 'reverter_reativacao' as const
     : entry.acao === 'confirmar' ? 'reverter_confirmacao' as const
     : 'reverter_edicao' as const
 

@@ -100,6 +100,7 @@ export type AuditAcao =
   | 'criar' | 'editar' | 'confirmar' | 'excluir'
   | 'reverter' | 'reverter_criacao' | 'reverter_exclusao'
   | 'reverter_edicao' | 'reverter_confirmacao'
+  | 'reverter_desativacao' | 'reverter_reativacao'
   | 'desativar' | 'reativar'
 
 export interface AuditLogTable {
