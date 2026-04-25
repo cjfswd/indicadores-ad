@@ -199,16 +199,17 @@ export function RegistroPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[var(--radius-md)] bg-indigo-500/15 text-indigo-400 flex items-center justify-center">
-            <ClipboardList size={20} />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-[var(--radius-md)] bg-indigo-500/15 text-indigo-400 flex items-center justify-center">
+            <ClipboardList size={16} className="sm:hidden" />
+            <ClipboardList size={20} className="hidden sm:block" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Registro Mensal</h1>
-            <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
+            <h1 className="text-lg sm:text-2xl font-bold text-[var(--color-text-primary)]">Registro Mensal</h1>
+            <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-0.5">
               Cada alteração é vinculada a um paciente com rastreabilidade completa
             </p>
           </div>
@@ -222,7 +223,7 @@ export function RegistroPage() {
       {/* ── Filtros unificados ── */}
       <div className="glass-card relative z-10">
         {/* Header: mês/ano sempre visível + toggle filtros */}
-        <div className="flex items-center gap-3 px-4 py-2.5 border-b border-[var(--overlay-border)] bg-[var(--overlay-soft)]">
+        <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 border-b border-[var(--overlay-border)] bg-[var(--overlay-soft)] flex-wrap">
           <Calendar size={14} className="text-[var(--color-accent)]" />
           <select value={mes} onChange={e => setMes(Number(e.target.value))}
             className="px-2.5 py-1.5 rounded-[var(--radius-md)] text-sm bg-[var(--color-surface-0)] border border-[var(--color-border)] text-[var(--color-text-primary)] cursor-pointer focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] outline-none transition-all">
@@ -244,7 +245,7 @@ export function RegistroPage() {
         </div>
 
         {/* Filters — always visible */}
-        <div className="px-4 py-3">
+        <div className="px-3 sm:px-4 py-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Operadora */}
             <div className="flex flex-col gap-1.5">
@@ -292,11 +293,11 @@ export function RegistroPage() {
       </div>
 
       {/* Action bar */}
-      <div className="flex items-center justify-between glass-card px-4 py-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between glass-card px-3 sm:px-4 py-3 gap-3">
         <span className="text-sm text-[var(--color-text-muted)]">
           <span className="text-[var(--color-text-primary)] font-semibold">{eventos.length}</span> evento{eventos.length !== 1 ? 's' : ''} registrado{eventos.length !== 1 ? 's' : ''} em {MESES[mes - 1]}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <button
             onClick={() => exportarRelatorio({
               titulo: 'Registro Mensal — Indicadores AD',
@@ -304,12 +305,12 @@ export function RegistroPage() {
               elementIds: ['registro-content'],
               nomeArquivo: `registro_${ano}_${String(mes).padStart(2, '0')}`,
             })}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-[var(--radius-md)] text-sm font-medium bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-3)] transition-colors">
+            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-[var(--radius-md)] text-sm font-medium bg-[var(--color-surface-2)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-3)] transition-colors">
             <Download size={14} /> Exportar PDF
           </button>
           {!isLocked && registroId && (
             <button onClick={confirmarRegistro}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-[var(--radius-md)] text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-500 transition-colors">
+              className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-[var(--radius-md)] text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-500 transition-colors">
               <Check size={14} /> Confirmar Mês
             </button>
           )}
@@ -326,7 +327,7 @@ export function RegistroPage() {
             <div key={grupo.codigo} className="glass-card overflow-hidden animate-fade-in" style={{ animationDelay: `${gi * 40}ms` }}>
               {/* Grupo Header */}
               <button onClick={() => toggleCollapse(grupo.codigo)}
-                className="w-full flex items-center gap-2 px-5 py-3.5 hover:bg-[var(--overlay-soft)] transition-colors">
+                className="w-full flex items-center gap-2 px-3 sm:px-5 py-3.5 hover:bg-[var(--overlay-soft)] transition-colors">
                 {isCollapsed(grupo.codigo) ? <ChevronRight size={16} className="text-[var(--color-text-muted)]" /> : <ChevronDown size={16} className="text-[var(--color-text-muted)]" />}
                 <span className="text-xs font-mono text-[var(--color-text-muted)] bg-[var(--overlay-soft)] px-2 py-0.5 rounded">{grupo.codigo}</span>
                 <span className="text-sm font-semibold text-[var(--color-accent)]">{grupo.titulo}</span>
@@ -353,7 +354,7 @@ export function RegistroPage() {
                     return (
                       <div key={campo.key} className={clsx(ci > 0 && 'border-t border-[var(--overlay-border)]')}>
                         {/* Campo header com contador e botão + */}
-                        <div className="flex items-center justify-between px-5 py-3">
+                        <div className="flex items-center justify-between px-3 sm:px-5 py-3">
                           <div className="flex items-center gap-3">
                             <span className="text-sm font-medium text-[var(--color-text-primary)]">{campo.label}</span>
                             <span className={clsx(
@@ -363,15 +364,15 @@ export function RegistroPage() {
                           </div>
                           {!isLocked && (
                             <button onClick={() => abrirModalIncremento(campo.tipoEvento, campo.label)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-medium bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 active:scale-95 transition-all border border-emerald-500/20">
-                              <Plus size={12} /> Registrar
+                              className="flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 rounded-[var(--radius-md)] text-[10px] sm:text-xs font-medium bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 active:scale-95 transition-all border border-emerald-500/20">
+                              <Plus size={10} className="sm:hidden" /><Plus size={12} className="hidden sm:inline" /> <span className="hidden sm:inline">Registrar</span>
                             </button>
                           )}
                         </div>
 
                         {/* Lista de eventos — SEMPRE visível */}
                         {evts.length > 0 && (
-                          <div className="px-5 pb-3 space-y-1.5">
+                          <div className="px-3 sm:px-5 pb-3 space-y-1.5">
                             {evts.map((ev, ei) => (
                               <div key={ev.id}
                                 className="flex items-start gap-3 px-3 py-2.5 rounded-[var(--radius-md)] bg-[var(--overlay-soft)] border border-[var(--overlay-border)] group animate-slide-in"
@@ -419,7 +420,7 @@ export function RegistroPage() {
 
                         {/* Estado vazio */}
                         {evts.length === 0 && (
-                          <div className="px-5 pb-3">
+                          <div className="px-3 sm:px-5 pb-3">
                             <p className="text-[11px] text-[var(--color-surface-3)] italic">Nenhum evento registrado</p>
                           </div>
                         )}
@@ -506,7 +507,7 @@ export function RegistroPage() {
               <button onClick={confirmarEvento}
                 disabled={!modalPaciente || modalSaving}
                 className={clsx(
-                  'flex items-center gap-2 px-5 py-2 rounded-[var(--radius-md)] text-sm font-medium transition-colors',
+                  'flex items-center gap-2 px-3 sm:px-5 py-2 rounded-[var(--radius-md)] text-sm font-medium transition-colors',
                   modalPaciente ? 'bg-emerald-600 text-white hover:bg-emerald-500' : 'bg-[var(--color-surface-2)] text-[var(--color-surface-3)] cursor-not-allowed',
                 )}>
                 {modalSaving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}

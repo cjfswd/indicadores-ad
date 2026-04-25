@@ -91,8 +91,9 @@ export function Sidebar() {
 
       {/* User + Logout */}
       <div className={clsx(
-        'flex items-center gap-3 mx-3 mb-2 px-3 py-2.5 rounded-[var(--radius-md)]',
+        'flex items-center mx-3 mb-2 px-3 py-2.5 rounded-[var(--radius-md)] overflow-hidden',
         'border border-[var(--color-border)] bg-[var(--overlay-soft)]',
+        collapsed ? 'flex-col gap-2 justify-center' : 'gap-3',
       )}>
         <div className="w-7 h-7 rounded-full bg-[var(--color-accent)]/20 flex items-center justify-center flex-shrink-0">
           <span className="text-xs font-bold text-[var(--color-accent)]">

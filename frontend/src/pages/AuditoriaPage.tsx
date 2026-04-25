@@ -322,15 +322,16 @@ export function AuditoriaPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[var(--radius-md)] bg-cyan-500/15 text-cyan-400 flex items-center justify-center">
-            <History size={20} />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-[var(--radius-md)] bg-cyan-500/15 text-cyan-400 flex items-center justify-center">
+            <History size={16} className="sm:hidden" />
+            <History size={20} className="hidden sm:block" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Logs</h1>
+            <h1 className="text-lg sm:text-2xl font-bold text-[var(--color-text-primary)]">Logs</h1>
             <p className="text-sm text-[var(--color-text-muted)]">
               Histórico de todas as alterações — {total} registro{total !== 1 ? 's' : ''}
             </p>
@@ -339,8 +340,8 @@ export function AuditoriaPage() {
       </div>
 
       {/* Filtros */}
-      <div className="glass-card p-4 flex flex-wrap gap-4 items-end relative z-10">
-        <div className="flex flex-col gap-1 min-w-[180px]">
+      <div className="glass-card p-3 sm:p-4 flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 sm:items-end relative z-10">
+        <div className="flex flex-col gap-1 w-full sm:w-auto sm:min-w-[180px]">
           <span className="text-xs text-[var(--color-text-muted)] font-medium">Entidade</span>
           <Combobox
             options={[
@@ -355,7 +356,7 @@ export function AuditoriaPage() {
             emptyLabel="Todas"
           />
         </div>
-        <div className="flex flex-col gap-1 min-w-[180px]">
+        <div className="flex flex-col gap-1 w-full sm:w-auto sm:min-w-[180px]">
           <span className="text-xs text-[var(--color-text-muted)] font-medium">Ação</span>
           <Combobox
             options={[

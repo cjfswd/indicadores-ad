@@ -16,9 +16,12 @@ export function LoginPage() {
     if (user) navigate('/dashboard', { replace: true })
   }, [user, navigate])
 
+  const gsiInitialized = useRef(false)
+
   // Load GSI script and render button + One Tap
   useEffect(() => {
-    if (user) return
+    if (user || gsiInitialized.current) return
+    gsiInitialized.current = true
 
     const script = document.createElement('script')
     script.src = 'https://accounts.google.com/gsi/client'
@@ -30,11 +33,10 @@ export function LoginPage() {
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: handleCredentialResponse,
-        auto_select: true,         // One Tap auto-select
+        auto_select: true,
         cancel_on_tap_outside: false,
       })
 
-      // Render the sign-in button
       if (btnRef.current) {
         window.google.accounts.id.renderButton(btnRef.current, {
           theme: 'outline',
@@ -46,7 +48,6 @@ export function LoginPage() {
         })
       }
 
-      // Show One Tap prompt
       window.google.accounts.id.prompt()
     }
 
@@ -73,19 +74,19 @@ export function LoginPage() {
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-[var(--color-bg)]">
-      <div className="glass-card p-8 w-full max-w-sm text-center space-y-6 animate-fade-in">
+    <div className="fixed inset-0 flex items-center justify-center bg-[var(--color-bg)] px-4">
+      <div className="glass-card p-5 sm:p-8 w-full max-w-sm text-center space-y-4 sm:space-y-6 animate-fade-in">
         {/* Logo / Brand */}
-        <div className="space-y-2">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <div className="space-y-1.5 sm:space-y-2">
+          <div className="w-10 h-10 sm:w-14 sm:h-14 mx-auto rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
+            <svg width="20" height="20" className="sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
             </svg>
           </div>
-          <h1 className="text-xl font-bold text-[var(--color-text-primary)]">
+          <h1 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">
             Indicadores AD
           </h1>
-          <p className="text-sm text-[var(--color-text-muted)]">
+          <p className="text-xs sm:text-sm text-[var(--color-text-muted)]">
             Atencao Domiciliar — Health+ Cuidados
           </p>
         </div>

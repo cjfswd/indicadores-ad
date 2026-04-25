@@ -216,15 +216,16 @@ export function PacientesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[var(--radius-md)] bg-violet-500/15 text-violet-400 flex items-center justify-center">
-            <Users size={20} />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-[var(--radius-md)] bg-violet-500/15 text-violet-400 flex items-center justify-center">
+            <Users size={16} className="sm:hidden" />
+            <Users size={20} className="hidden sm:block" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Pacientes</h1>
+            <h1 className="text-lg sm:text-2xl font-bold text-[var(--color-text-primary)]">Pacientes</h1>
             <p className="text-sm text-[var(--color-text-muted)]">
               {pacientes.filter(p => p.ativo).length} ativos · {todosConvenios.length} convênios
             </p>
@@ -240,7 +241,7 @@ export function PacientesPage() {
 
 
       {/* Filtros */}
-      <div className="glass-card p-4 flex flex-col sm:flex-row gap-3 relative z-10">
+      <div className="glass-card p-3 sm:p-4 flex flex-col sm:flex-row gap-3 relative z-10">
         <div className="flex-1">
           <Combobox
             options={pacientes.map(p => ({ value: p.nome, label: p.nome, sublabel: p.convenio }))}
@@ -250,7 +251,7 @@ export function PacientesPage() {
             emptyLabel="Todos os pacientes"
           />
         </div>
-        <div className="min-w-[180px]">
+        <div className="w-full sm:w-auto sm:min-w-[180px]">
           <Combobox
             options={todosConvenios.map(c => ({ value: c, label: c }))}
             value={filtroConvenio === 'todos' ? '' : filtroConvenio}
@@ -469,7 +470,7 @@ export function PacientesPage() {
                 onClick={salvar}
                 disabled={!form.nome.trim() || !form.convenio.trim()}
                 className={clsx(
-                  'flex items-center gap-2 px-5 py-2 rounded-[var(--radius-md)] text-sm font-medium transition-colors',
+                  'flex items-center gap-2 px-3 sm:px-5 py-2 rounded-[var(--radius-md)] text-sm font-medium transition-colors',
                   form.nome.trim() && form.convenio.trim()
                     ? 'bg-emerald-600 text-white hover:bg-emerald-500'
                     : 'bg-[var(--color-surface-2)] text-[var(--color-surface-3)] cursor-not-allowed',
@@ -588,7 +589,7 @@ export function PacientesPage() {
                   onClick={() => desativar(desativarId)}
                   disabled={!justDesativar.trim()}
                   className={clsx(
-                    'flex items-center gap-2 px-5 py-2 rounded-[var(--radius-md)] text-sm font-medium transition-colors',
+                    'flex items-center gap-2 px-3 sm:px-5 py-2 rounded-[var(--radius-md)] text-sm font-medium transition-colors',
                     justDesativar.trim() ? 'bg-amber-600 text-white hover:bg-amber-500' : 'bg-[var(--color-surface-2)] text-[var(--color-surface-3)] cursor-not-allowed',
                   )}
                 >

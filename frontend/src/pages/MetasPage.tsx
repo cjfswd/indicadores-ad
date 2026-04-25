@@ -152,12 +152,13 @@ export function MetasPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[var(--radius-md)] bg-amber-500/15 text-amber-400 flex items-center justify-center">
-            <Target size={20} />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-[var(--radius-md)] bg-amber-500/15 text-amber-400 flex items-center justify-center">
+            <Target size={16} className="sm:hidden" />
+            <Target size={20} className="hidden sm:block" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Metas</h1>
-            <p className="text-sm text-[var(--color-text-muted)]">
+            <h1 className="text-lg sm:text-2xl font-bold text-[var(--color-text-primary)]">Metas</h1>
+            <p className="text-xs sm:text-sm text-[var(--color-text-muted)]">
               Configure limiares, sentido e vigência de cada indicador
             </p>
           </div>
@@ -188,7 +189,7 @@ export function MetasPage() {
       </div>
 
       {/* Ano selector */}
-      <div className="glass-card p-4 flex items-center gap-3 relative z-10">
+      <div className="glass-card p-3 sm:p-4 flex items-center gap-3 relative z-10">
         <Calendar size={14} className="text-[var(--color-accent)]" />
         <span className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">Ano</span>
         <div className="min-w-[100px]">

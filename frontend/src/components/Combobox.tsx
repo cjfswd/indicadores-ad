@@ -83,7 +83,7 @@ export function Combobox({
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full min-w-[200px] max-h-[280px] flex flex-col rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-1)] shadow-lg animate-fade-in overflow-hidden">
+        <div className="absolute z-50 mt-1 w-full max-h-[280px] flex flex-col rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-1)] shadow-lg animate-fade-in overflow-hidden">
           {/* Search input */}
           <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--overlay-border)]">
             <Search size={13} className="text-[var(--color-text-muted)] flex-shrink-0" />

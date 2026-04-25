@@ -3,7 +3,6 @@ import { Users, AlertTriangle, TrendingUp, Download, FileSpreadsheet, CalendarRa
 import { PeriodoSelector } from '@/components/dashboard/PeriodoSelector'
 import { ResumoCard } from '@/components/dashboard/ResumoCard'
 import { SemaforoCard } from '@/components/dashboard/SemaforoCard'
-import { GraficoTendencia } from '@/components/dashboard/GraficoTendencia'
 import { GraficoBarrasSimples } from '@/components/dashboard/GraficoBarras'
 import { GraficoPizza } from '@/components/dashboard/GraficoPizza'
 import { api } from '@/lib/api'
@@ -24,7 +23,6 @@ export function DashboardPage() {
   const now = new Date()
   const [ano, setAno] = useState(now.getFullYear())
   const [mes, setMes] = useState(now.getMonth() + 1)
-  const [selectedIndicador, setSelectedIndicador] = useState('01')
   const [semaforos, setSemaforos] = useState<SemaforoItem[]>([])
   const [registro, setRegistro] = useState<Record<string, unknown> | null>(null)
   const [loading, setLoading] = useState(true)
@@ -61,12 +59,6 @@ export function DashboardPage() {
     }
     fetchData()
   }, [ano, mes])
-
-  const selected = semaforos.find(s => s.codigo === selectedIndicador)
-  const historico = MESES_LABELS.slice(0, mes).map((m, i) => ({
-    mes: m,
-    valor: i === mes - 1 ? (selected?.valor ?? 0) : 10 + Math.round(Math.random() * 15 * 10) / 10,
-  }))
 
   const pacientesTotal = Number(registro?.pacientes_total ?? 0)
   const pacientesAD = Number(registro?.pacientes_ad ?? 0)
@@ -269,19 +261,18 @@ export function DashboardPage() {
           Indicadores — Semáforos
         </h2>
         {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {Array.from({ length: 9 }).map((_, i) => (
               <div key={i} className="glass-card p-4 h-32 animate-pulse bg-[var(--overlay-soft)]" />
             ))}
           </div>
         ) : (
-          <div id="semaforo-grid" className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
+          <div id="semaforo-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {semaforos.map((item, i) => (
               <SemaforoCard
                 key={item.codigo}
                 item={item}
                 index={i}
-                onClick={() => setSelectedIndicador(item.codigo)}
               />
             ))}
           </div>
@@ -290,20 +281,13 @@ export function DashboardPage() {
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
-        <GraficoTendencia
-          dados={historico}
-          meta={selected?.meta}
-          alerta={selected?.alerta}
-          unidade={selected?.unidade}
-          label={selected?.nome ?? 'Indicador'}
-        />
         <GraficoBarrasSimples
           dados={dadosEventosTipo}
           titulo="Eventos Adversos por Tipo"
         />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
         <div id="grafico-pizza">
           <GraficoPizza
             dados={dadosModalidade}
@@ -318,7 +302,7 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
         <div id="grafico-obitos">
           <GraficoPizza
             dados={dadosObitos}
