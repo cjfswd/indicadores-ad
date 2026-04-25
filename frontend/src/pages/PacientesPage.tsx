@@ -171,7 +171,8 @@ export function PacientesPage() {
       setArquivoForm(null)
     } catch (err) {
       console.error('Erro ao salvar paciente:', err)
-      alert('Erro ao salvar paciente. Verifique os dados e tente novamente.')
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido'
+      alert(`Erro ao salvar paciente: ${msg}`)
     }
   }
 
