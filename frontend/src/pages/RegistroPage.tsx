@@ -99,7 +99,7 @@ export function RegistroPage() {
     try {
       const [regData, pacData, evData] = await Promise.all([
         apiClient.registros.buscarMes(ano, mes).catch(() => null),
-        apiClient.pacientes.listar({ ativo: true }),
+        apiClient.pacientes.listar({ status: 'ativo' }),
         apiClient.eventos.listar({ ano, mes }),
       ])
       if (regData) {

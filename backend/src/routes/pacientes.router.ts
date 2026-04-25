@@ -16,8 +16,10 @@ pacientesRouter.get('/', async (req, res) => {
   let query = db.selectFrom('pacientes').selectAll()
 
   if (req.query.convenio) query = query.where('convenio', '=', req.query.convenio as 'Camperj' | 'Unimed')
-  if (req.query.ativo !== undefined) query = query.where('ativo', '=', req.query.ativo === 'true')
-  else query = query.where('ativo', '=', true) // default: só ativos
+  const statusFilter = (req.query.status as string) ?? 'ativo'
+  if (statusFilter === 'todos') query = query.where('status', '!=', 'excluido')
+  else if (statusFilter === 'inativo') query = query.where('status', '=', 'inativo')
+  else query = query.where('status', '=', 'ativo') // default: só ativos
   if (req.query.busca) query = query.where('nome', 'like', `%${req.query.busca}%`)
 
   const rows = await query.orderBy('convenio').orderBy('nome').execute()
@@ -39,7 +41,7 @@ pacientesRouter.get('/convenios', async (_req, res) => {
     .selectFrom('pacientes')
     .select('convenio')
     .distinct()
-    .where('ativo', '=', true)
+    .where('status', '=', 'ativo')
     .orderBy('convenio')
     .execute()
   res.json(rows.map(r => r.convenio))
@@ -130,7 +132,7 @@ async function desativarPaciente(id: string, body: { justificativa?: string; mot
 
   await db.updateTable('pacientes')
     .set({
-      ativo: false,
+      status: 'inativo' as const,
       motivo_desativacao: body.motivo ?? null,
       indicador_desativacao: body.indicador ?? null,
       atualizado_em: now(),
@@ -159,11 +161,12 @@ async function reativarPaciente(id: string, body: { justificativa?: string }, re
 
   const antes = await db.selectFrom('pacientes').selectAll().where('id', '=', id).executeTakeFirst()
   if (!antes) throw new NotFoundError('Paciente', id)
-  if (antes.ativo) throw new Error('Paciente já está ativo')
+  if (antes.status === 'ativo') throw new Error('Paciente já está ativo')
+  if (antes.status === 'excluido') throw new Error('Paciente excluído não pode ser reativado por esta rota')
 
   await db.updateTable('pacientes')
     .set({
-      ativo: true,
+      status: 'ativo' as const,
       motivo_desativacao: null,
       indicador_desativacao: null,
       atualizado_em: now(),

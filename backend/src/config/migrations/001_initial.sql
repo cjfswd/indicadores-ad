@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS pacientes (
   convenio TEXT NOT NULL CHECK(convenio IN ('Camperj','Unimed')),
   modalidade TEXT NOT NULL CHECK(modalidade IN ('AD','ID')),
   observacoes TEXT,
-  ativo BOOLEAN NOT NULL DEFAULT true,
+  status TEXT NOT NULL DEFAULT 'ativo' CHECK(status IN ('ativo','inativo','excluido')),
   motivo_desativacao TEXT,
   indicador_desativacao TEXT,
   criado_por TEXT,
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS eventos_pacientes (
   documentacao_url TEXT,
   descricao TEXT,
   registrado_por TEXT,
-  ativo BOOLEAN NOT NULL DEFAULT true,
+  status TEXT NOT NULL DEFAULT 'ativo' CHECK(status IN ('ativo','excluido')),
   criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
 -- ── Indexes ──
 CREATE INDEX IF NOT EXISTS idx_registros_ano_mes ON registros_mensais(ano, mes);
 CREATE INDEX IF NOT EXISTS idx_pacientes_convenio ON pacientes(convenio);
-CREATE INDEX IF NOT EXISTS idx_pacientes_ativo ON pacientes(ativo);
+CREATE INDEX IF NOT EXISTS idx_pacientes_status ON pacientes(status);
 CREATE INDEX IF NOT EXISTS idx_eventos_paciente ON eventos_pacientes(paciente_id);
 CREATE INDEX IF NOT EXISTS idx_eventos_ano_mes ON eventos_pacientes(ano, mes);
 CREATE INDEX IF NOT EXISTS idx_metas_indicador_ano ON metas(indicador_codigo, ano);

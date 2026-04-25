@@ -11,7 +11,7 @@ export interface PacienteResponse {
   convenio: 'Camperj' | 'Unimed'
   modalidade: 'AD' | 'ID'
   observacoes: string | null
-  ativo: boolean
+  status: 'ativo' | 'inativo' | 'excluido'
   motivo_desativacao: string | null
   indicador_desativacao: string | null
   criado_por: string | null
@@ -38,7 +38,7 @@ export interface EventoResponse {
   documentacao_url: string | null
   descricao: string | null
   registrado_por: string | null
-  ativo: boolean
+  status: 'ativo' | 'excluido'
   criado_em: string
   paciente_nome: string | null
   paciente_convenio: string | null
@@ -216,10 +216,10 @@ function extractData<T>(res: { data: T }): T {
 export const apiClient = {
   // ── Pacientes ──────────────────────────────────────────────
   pacientes: {
-    listar(params?: { convenio?: string; ativo?: boolean; busca?: string }) {
+    listar(params?: { convenio?: string; status?: string; busca?: string }) {
       const query = new URLSearchParams()
       if (params?.convenio) query.set('convenio', params.convenio)
-      if (params?.ativo !== undefined) query.set('ativo', String(params.ativo))
+      if (params?.status) query.set('status', params.status)
       if (params?.busca) query.set('busca', params.busca)
       const qs = query.toString()
       return api.get<PacienteListResponse>(`/pacientes${qs ? `?${qs}` : ''}`).then(extractData)

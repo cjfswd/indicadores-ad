@@ -33,10 +33,10 @@ eventosRouter.get('/', async (req, res) => {
     .select([
       'e.id', 'e.paciente_id', 'e.registro_id', 'e.ano', 'e.mes',
       'e.tipo_evento', 'e.subtipo', 'e.data_evento', 'e.observacao_texto',
-      'e.documentacao_url', 'e.descricao', 'e.registrado_por', 'e.ativo', 'e.criado_em',
+      'e.documentacao_url', 'e.descricao', 'e.registrado_por', 'e.status', 'e.criado_em',
       'p.nome as paciente_nome', 'p.convenio as paciente_convenio', 'p.modalidade as paciente_modalidade',
     ])
-    .where('e.ativo', '=', true) // só eventos ativos
+    .where('e.status', '=', 'ativo')
 
   if (req.query.ano) query = query.where('e.ano', '=', Number(req.query.ano))
   if (req.query.mes) query = query.where('e.mes', '=', Number(req.query.mes))
@@ -57,7 +57,7 @@ eventosRouter.post('/', upload.single('arquivo'), async (req, res) => {
     return
   }
 
-  const paciente = await db.selectFrom('pacientes').select('id').where('id', '=', paciente_id).where('ativo', '=', true).executeTakeFirst()
+  const paciente = await db.selectFrom('pacientes').select('id').where('id', '=', paciente_id).where('status', '!=', 'excluido').executeTakeFirst()
   if (!paciente) throw new NotFoundError('Paciente', paciente_id)
 
   const id = uuid()
@@ -116,11 +116,11 @@ async function softDeleteEvento(id: string, justificativa: string, arquivoUrl: s
     .leftJoin('pacientes as p', 'p.id', 'e.paciente_id')
     .select([
       'e.id', 'e.paciente_id', 'e.ano', 'e.mes', 'e.tipo_evento',
-      'e.documentacao_url', 'e.ativo',
+      'e.documentacao_url', 'e.status',
       'p.nome as paciente_nome', 'p.convenio as paciente_convenio',
     ])
     .where('e.id', '=', id)
-    .where('e.ativo', '=', true)
+    .where('e.status', '=', 'ativo')
     .executeTakeFirst()
 
   if (!eventoFull) throw new NotFoundError('Evento', id)
@@ -133,7 +133,7 @@ async function softDeleteEvento(id: string, justificativa: string, arquivoUrl: s
 
   // Soft delete
   await db.updateTable('eventos_pacientes')
-    .set({ ativo: false })
+    .set({ status: 'excluido' as const })
     .where('id', '=', id)
     .execute()
 
@@ -215,7 +215,7 @@ eventosRouter.post('/re-registrar', upload.single('arquivo'), async (req, res) =
     .selectFrom('eventos_pacientes')
     .selectAll()
     .where('id', '=', auditEntry.entidade_id)
-    .where('ativo', '=', false)
+    .where('status', '=', 'excluido')
     .executeTakeFirst()
 
   const tipoEvento = auditEntry.campo_alterado
@@ -228,7 +228,7 @@ eventosRouter.post('/re-registrar', upload.single('arquivo'), async (req, res) =
   if (existing) {
     // Reativar o evento soft-deleted
     await db.updateTable('eventos_pacientes')
-      .set({ ativo: true })
+      .set({ status: 'ativo' as const })
       .where('id', '=', existing.id)
       .execute()
 

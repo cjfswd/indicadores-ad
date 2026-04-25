@@ -58,7 +58,7 @@ export interface PacienteTable {
   convenio: 'Camperj' | 'Unimed'
   modalidade: 'AD' | 'ID'
   observacoes: string | null
-  ativo: Generated<boolean>
+  status: Generated<'ativo' | 'inativo' | 'excluido'>
   motivo_desativacao: string | null
   indicador_desativacao: string | null
   criado_por: string | null
@@ -79,7 +79,7 @@ export interface EventoPacienteTable {
   documentacao_url: string | null
   descricao: string | null
   registrado_por: string | null
-  ativo: Generated<boolean>
+  status: Generated<'ativo' | 'excluido'>
   criado_em: Generated<string>
 }
 

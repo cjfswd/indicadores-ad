@@ -114,38 +114,38 @@ auditoriaRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res)
 
   if (entry.entidade === 'evento_paciente') {
     if (entry.acao === 'criar') {
-      // Reverter criação → soft delete (ativo = 0)
+      // Reverter criação → excluir (status = 'excluido')
       entityBefore = await db
         .selectFrom('eventos_pacientes as e')
         .leftJoin('pacientes as p', 'p.id', 'e.paciente_id')
         .select([
-          'e.id', 'e.paciente_id', 'e.ano', 'e.mes', 'e.tipo_evento', 'e.ativo',
+          'e.id', 'e.paciente_id', 'e.ano', 'e.mes', 'e.tipo_evento', 'e.status',
           'p.nome as paciente_nome',
         ])
         .where('e.id', '=', entry.entidade_id)
         .executeTakeFirst()
 
       if (entityBefore) {
-        const ev = entityBefore as { tipo_evento: string; ano: number; mes: number; ativo: boolean }
-        if (ev.ativo === true) {
+        const ev = entityBefore as { tipo_evento: string; ano: number; mes: number; status: string }
+        if (ev.status === 'ativo') {
           await incrementarMetrica(db, ev.tipo_evento, ev.ano, ev.mes, -1)
           await db.updateTable('eventos_pacientes')
-            .set({ ativo: false })
+            .set({ status: 'excluido' as const })
             .where('id', '=', entry.entidade_id)
             .execute()
         }
         entityAfter = await db.selectFrom('eventos_pacientes').selectAll().where('id', '=', entry.entidade_id).executeTakeFirst()
       }
     } else if (entry.acao === 'excluir') {
-      // Reverter exclusão → reativar (ativo = 1)
+      // Reverter exclusão → reativar (status = 'ativo')
       entityBefore = await db.selectFrom('eventos_pacientes').selectAll().where('id', '=', entry.entidade_id).executeTakeFirst()
 
       if (entityBefore) {
         // Reativar evento soft-deleted
-        const ev = entityBefore as { tipo_evento: string; ano: number; mes: number; ativo: boolean }
-        if (ev.ativo === false) {
+        const ev = entityBefore as { tipo_evento: string; ano: number; mes: number; status: string }
+        if (ev.status === 'excluido') {
           await db.updateTable('eventos_pacientes')
-            .set({ ativo: true })
+            .set({ status: 'ativo' as const })
             .where('id', '=', entry.entidade_id)
             .execute()
           await incrementarMetrica(db, ev.tipo_evento, ev.ano ?? ano, ev.mes ?? mes, 1)
@@ -186,9 +186,9 @@ auditoriaRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res)
       // Reverter criação → soft delete (desativar o paciente criado)
       if (entityBefore) {
         const eb = entityBefore as Record<string, unknown>
-        if (eb.ativo === true) {
+        if (eb.status === 'ativo') {
           await db.updateTable('pacientes')
-            .set({ ativo: false, motivo_desativacao: `Reversão de criação: ${justificativa}`, atualizado_em: now() } as never)
+            .set({ status: 'excluido' as const, motivo_desativacao: `Reversão de criação: ${justificativa}`, atualizado_em: now() } as never)
             .where('id', '=', entry.entidade_id)
             .execute()
         }
@@ -201,7 +201,7 @@ auditoriaRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res)
         const antesData = payloadData?.antes
         await db.updateTable('pacientes')
           .set({
-            ativo: true,
+            status: 'ativo' as const,
             motivo_desativacao: null,
             indicador_desativacao: null,
             // Restaurar campos se tínhamos snapshot
@@ -245,7 +245,7 @@ auditoriaRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res)
         const antesData = payloadData?.antes
         await db.updateTable('pacientes')
           .set({
-            ativo: false,
+            status: 'inativo' as const,
             motivo_desativacao: antesData?.motivo_desativacao ?? `Reversão de reativação: ${justificativa}`,
             indicador_desativacao: antesData?.indicador_desativacao ?? null,
             atualizado_em: now(),

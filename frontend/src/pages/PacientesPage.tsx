@@ -12,7 +12,7 @@ interface PacienteLocal {
   modalidade: 'AD' | 'ID'
   data_nascimento: string | null
   observacoes: string | null
-  ativo: boolean
+  status: 'ativo' | 'inativo' | 'excluido'
   motivo_desativacao: string | null
   indicador_desativacao: string | null
 }
@@ -20,14 +20,14 @@ interface PacienteLocal {
 const CONVENIOS = ['Camperj', 'Unimed'] as const
 
 const INITIAL_DATA: PacienteLocal[] = [
-  { id: '1', nome: 'Maria Silva Santos', convenio: 'Camperj', modalidade: 'AD', data_nascimento: '1948-03-12', observacoes: null, ativo: true, motivo_desativacao: null, indicador_desativacao: null },
-  { id: '2', nome: 'João Carlos Pereira', convenio: 'Unimed', modalidade: 'ID', data_nascimento: '1955-07-20', observacoes: 'Paciente com traqueostomia', ativo: true, motivo_desativacao: null, indicador_desativacao: null },
-  { id: '3', nome: 'Ana Beatriz Oliveira', convenio: 'Camperj', modalidade: 'AD', data_nascimento: '1940-11-05', observacoes: null, ativo: true, motivo_desativacao: null, indicador_desativacao: null },
-  { id: '4', nome: 'Pedro Augusto Lima', convenio: 'Unimed', modalidade: 'ID', data_nascimento: '1962-01-30', observacoes: null, ativo: true, motivo_desativacao: null, indicador_desativacao: null },
-  { id: '5', nome: 'Francisca das Dores', convenio: 'Camperj', modalidade: 'AD', data_nascimento: '1938-09-18', observacoes: null, ativo: false, motivo_desativacao: 'Óbito em domicílio', indicador_desativacao: '04' },
-  { id: '6', nome: 'Roberto Mendes Junior', convenio: 'Camperj', modalidade: 'AD', data_nascimento: '1970-05-14', observacoes: 'Dieta por GTT', ativo: true, motivo_desativacao: null, indicador_desativacao: null },
-  { id: '7', nome: 'Luciana Ferraz Costa', convenio: 'Unimed', modalidade: 'AD', data_nascimento: '1985-12-01', observacoes: null, ativo: true, motivo_desativacao: null, indicador_desativacao: null },
-  { id: '8', nome: 'Antônio de Souza', convenio: 'Camperj', modalidade: 'AD', data_nascimento: '1945-06-22', observacoes: null, ativo: true, motivo_desativacao: null, indicador_desativacao: null },
+  { id: '1', nome: 'Maria Silva Santos', convenio: 'Camperj', modalidade: 'AD', data_nascimento: '1948-03-12', observacoes: null, status: 'ativo', motivo_desativacao: null, indicador_desativacao: null },
+  { id: '2', nome: 'João Carlos Pereira', convenio: 'Unimed', modalidade: 'ID', data_nascimento: '1955-07-20', observacoes: 'Paciente com traqueostomia', status: 'ativo', motivo_desativacao: null, indicador_desativacao: null },
+  { id: '3', nome: 'Ana Beatriz Oliveira', convenio: 'Camperj', modalidade: 'AD', data_nascimento: '1940-11-05', observacoes: null, status: 'ativo', motivo_desativacao: null, indicador_desativacao: null },
+  { id: '4', nome: 'Pedro Augusto Lima', convenio: 'Unimed', modalidade: 'ID', data_nascimento: '1962-01-30', observacoes: null, status: 'ativo', motivo_desativacao: null, indicador_desativacao: null },
+  { id: '5', nome: 'Francisca das Dores', convenio: 'Camperj', modalidade: 'AD', data_nascimento: '1938-09-18', observacoes: null, status: 'inativo', motivo_desativacao: 'Óbito em domicílio', indicador_desativacao: '04' },
+  { id: '6', nome: 'Roberto Mendes Junior', convenio: 'Camperj', modalidade: 'AD', data_nascimento: '1970-05-14', observacoes: 'Dieta por GTT', status: 'ativo', motivo_desativacao: null, indicador_desativacao: null },
+  { id: '7', nome: 'Luciana Ferraz Costa', convenio: 'Unimed', modalidade: 'AD', data_nascimento: '1985-12-01', observacoes: null, status: 'ativo', motivo_desativacao: null, indicador_desativacao: null },
+  { id: '8', nome: 'Antônio de Souza', convenio: 'Camperj', modalidade: 'AD', data_nascimento: '1945-06-22', observacoes: null, status: 'ativo', motivo_desativacao: null, indicador_desativacao: null },
 ]
 
 interface PacienteForm {
@@ -60,7 +60,7 @@ export function PacientesPage() {
         modalidade: p.modalidade ?? 'AD',
         data_nascimento: p.data_nascimento,
         observacoes: p.observacoes,
-        ativo: Boolean(p.ativo),
+        status: p.status,
         motivo_desativacao: p.motivo_desativacao,
         indicador_desativacao: p.indicador_desativacao,
       })))
@@ -228,7 +228,7 @@ export function PacientesPage() {
           <div>
             <h1 className="text-lg sm:text-2xl font-bold text-[var(--color-text-primary)]">Pacientes</h1>
             <p className="text-sm text-[var(--color-text-muted)]">
-              {pacientes.filter(p => p.ativo).length} ativos · {todosConvenios.length} convênios
+              {pacientes.filter(p => p.status === 'ativo').length} ativos · {todosConvenios.length} convênios
             </p>
           </div>
         </div>
@@ -276,7 +276,7 @@ export function PacientesPage() {
               <span className="text-sm font-semibold text-[var(--color-accent)]">{convenio}</span>
               <span className="text-xs text-[var(--color-text-muted)] ml-1">({lista.length})</span>
               <span className="ml-auto text-xs text-[var(--color-text-muted)]">
-                {lista.filter(p => p.ativo).length} ativos
+                {lista.filter(p => p.status === 'ativo').length} ativos
               </span>
             </button>
 
@@ -288,7 +288,7 @@ export function PacientesPage() {
                     key={p.id}
                     className={clsx(
                       'flex items-center justify-between px-4 py-3 animate-slide-in hover:bg-[var(--overlay-soft)] transition-colors',
-                      !p.ativo && 'opacity-50',
+                      p.status !== 'ativo' && 'opacity-50',
                     )}
                     style={{ animationDelay: `${i * 30}ms` }}
                   >
@@ -313,13 +313,13 @@ export function PacientesPage() {
                           )}
                           <span className={clsx(
                             'text-[10px] font-medium',
-                            p.ativo ? 'text-emerald-400' : 'text-red-400',
+                            p.status === 'ativo' ? 'text-emerald-400' : 'text-red-400',
                           )}
-                            title={!p.ativo && p.motivo_desativacao ? `Motivo: ${p.motivo_desativacao}${p.indicador_desativacao ? ` (Ind. ${p.indicador_desativacao})` : ''}` : undefined}
+                            title={p.status !== 'ativo' && p.motivo_desativacao ? `Motivo: ${p.motivo_desativacao}${p.indicador_desativacao ? ` (Ind. ${p.indicador_desativacao})` : ''}` : undefined}
                           >
-                            {p.ativo ? 'Ativo' : 'Inativo'}
+                            {p.status === 'ativo' ? 'Ativo' : 'Inativo'}
                           </span>
-                          {!p.ativo && p.motivo_desativacao && (
+                          {p.status !== 'ativo' && p.motivo_desativacao && (
                             <span className="text-[10px] text-red-400/60 truncate max-w-[120px]" title={p.motivo_desativacao}>
                               {p.motivo_desativacao}
                             </span>
@@ -330,7 +330,7 @@ export function PacientesPage() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                      {p.ativo ? (
+                      {p.status === 'ativo' ? (
                         <button
                           onClick={() => setDesativarId(p.id)}
                           className="p-1.5 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:text-amber-400 hover:bg-amber-500/10 transition-colors"

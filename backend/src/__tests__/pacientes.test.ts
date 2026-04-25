@@ -32,11 +32,11 @@ describe('GET /api/v1/pacientes', () => {
     }
   })
 
-  it('deve filtrar por ativo', async () => {
-    const res = await request(app).get('/api/v1/pacientes?ativo=true')
+  it('deve filtrar por status', async () => {
+    const res = await request(app).get('/api/v1/pacientes?status=ativo')
     expect(res.status).toBe(200)
     for (const pac of res.body.dados) {
-      expect(pac.ativo).toBe(1)
+      expect(pac.status).toBe('ativo')
     }
   })
 
@@ -66,7 +66,7 @@ describe('POST /api/v1/pacientes', () => {
     expect(res.body).toHaveProperty('id')
     expect(res.body.nome).toBe('Teste Unitário')
     expect(res.body.convenio).toBe('Camperj')
-    expect(res.body.ativo).toBe(1)
+    expect(res.body.status).toBe('ativo')
   })
 
   it('deve criar paciente com todos os campos opcionais', async () => {
@@ -158,29 +158,27 @@ describe('PUT /api/v1/pacientes/:id', () => {
   })
 })
 
-describe('PATCH /api/v1/pacientes/:id/ativo', () => {
-  it('deve toggle ativo e gerar audit com antes/depois', async () => {
+describe('POST /api/v1/pacientes/:id/desativar + reativar', () => {
+  it('deve desativar e reativar paciente', async () => {
     const listRes = await request(app).get('/api/v1/pacientes')
-    const pac = listRes.body.dados.find((p: Record<string, unknown>) => p.ativo === 1)
+    const pac = listRes.body.dados.find((p: Record<string, unknown>) => p.status === 'ativo')
 
-    const res = await request(app).patch(`/api/v1/pacientes/${pac.id}/ativo`).send({})
-    expect(res.status).toBe(200)
-    expect(res.body.ativo).toBe(0)
+    // Desativar
+    const desRes = await request(app)
+      .post(`/api/v1/pacientes/${pac.id}/desativar`)
+      .send({ justificativa: 'teste', motivo: 'Alta', indicador: '01' })
+    expect(desRes.status).toBe(200)
 
-    // Verificar audit
-    const auditRes = await request(app).get(`/api/v1/auditoria?entidade=paciente&por_pagina=50`)
-    const entry = auditRes.body.dados.find(
-      (e: Record<string, unknown>) => e.entidade_id === pac.id && e.valor_anterior === 'ativo=1',
-    )
-    expect(entry).toBeDefined()
-    expect(entry.payload).toBeTruthy()
-    const parsed = JSON.parse(entry.payload)
-    expect(parsed.antes.ativo).toBe(1)
-    expect(parsed.depois.ativo).toBe(0)
+    // Verificar que ficou inativo
+    const getRes = await request(app).get(`/api/v1/pacientes/${pac.id}`)
+    expect(getRes.body.status).toBe('inativo')
 
-    // Toggle back
-    const res2 = await request(app).patch(`/api/v1/pacientes/${pac.id}/ativo`).send({})
-    expect(res2.body.ativo).toBe(1)
+    // Reativar
+    const reaRes = await request(app)
+      .post(`/api/v1/pacientes/${pac.id}/reativar`)
+      .send({ justificativa: 'teste reativação' })
+    expect(reaRes.status).toBe(200)
+    expect(reaRes.body.status).toBe('ativo')
   })
 })
 
