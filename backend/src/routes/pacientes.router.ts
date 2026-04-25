@@ -197,10 +197,45 @@ pacientesRouter.post('/:id/desativar', async (req, res) => {
   res.json(result)
 })
 
-// ── DELETE /:id — Alias for desativar (backwards compat) ──
+// ── DELETE /:id — Excluir (soft delete → status = 'excluido') ──
 pacientesRouter.delete('/:id', async (req, res) => {
-  const result = await desativarPaciente(req.params.id, req.body ?? {}, req)
-  res.json(result)
+  const db = getKysely()
+  const { id } = req.params
+  const body = req.body as { justificativa?: string } | undefined
+
+  if (!body?.justificativa?.trim()) {
+    res.status(400).json({ error: 'Justificativa obrigatória para excluir paciente' })
+    return
+  }
+
+  const antes = await db.selectFrom('pacientes').selectAll().where('id', '=', id).executeTakeFirst()
+  if (!antes) throw new NotFoundError('Paciente', id)
+  if (antes.status === 'excluido') {
+    res.status(400).json({ error: 'Paciente já está excluído' })
+    return
+  }
+
+  await db.updateTable('pacientes')
+    .set({
+      status: 'excluido' as const,
+      atualizado_em: now(),
+    })
+    .where('id', '=', id)
+    .execute()
+
+  await db.insertInto('audit_log').values({
+    id: uuid(),
+    entidade: 'paciente',
+    entidade_id: id,
+    acao: 'excluir',
+    usuario_email: getRequestEmail(req),
+    justificativa: body.justificativa,
+    valor_anterior: antes.nome,
+    documentacao_url: null,
+    payload: JSON.stringify({ antes }),
+  }).execute()
+
+  res.status(204).end()
 })
 
 // ── POST /:id/reativar — Primary reativar route (proxy-safe) ──

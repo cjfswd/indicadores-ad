@@ -241,6 +241,10 @@ export const apiClient = {
       return api.post<{ message: string; id: string }>(`/pacientes/${id}/desativar`, payload).then(extractData)
     },
 
+    excluir(id: string, justificativa: string) {
+      return api.delete(`/pacientes/${id}`, { data: { justificativa } })
+    },
+
     reativar(id: string, payload?: PacienteReativarPayload) {
       return api.post<PacienteResponse>(`/pacientes/${id}/reativar`, payload ?? {}).then(extractData)
     },

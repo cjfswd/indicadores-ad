@@ -179,10 +179,7 @@ export function PacientesPage() {
   const excluir = async (id: string) => {
     if (!justificativaExcluir.trim()) return
     try {
-      await apiClient.pacientes.desativar(id, {
-        justificativa: justificativaExcluir,
-        motivo: justificativaExcluir,
-      })
+      await apiClient.pacientes.excluir(id, justificativaExcluir)
       await fetchPacientes()
     } catch (err) {
       console.error('Erro ao excluir paciente:', err)
