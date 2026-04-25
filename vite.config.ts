@@ -9,6 +9,14 @@ export default defineConfig(({ isSsrBuild }) => ({
       ? { input: "./server/app.ts" }
       : undefined,
   },
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+      },
+    },
+  },
   plugins: [
     tailwindcss(),
     reactRouter(),
