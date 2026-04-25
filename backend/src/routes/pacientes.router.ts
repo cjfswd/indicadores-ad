@@ -60,10 +60,9 @@ pacientesRouter.get('/:id', async (req, res) => {
 })
 
 // ── POST — Criar paciente ──
-pacientesRouter.post('/', upload.single('arquivo'), validate(pacienteSchema), async (req, res) => {
+pacientesRouter.post('/', validate(pacienteSchema), async (req, res) => {
   const db = getKysely()
   const { nome, data_nascimento, convenio, modalidade, observacoes } = req.body as Paciente
-  const arquivoUrl = req.file ? `/uploads/${req.file.filename}` : null
   const id = uuid()
 
   await db.insertInto('pacientes').values({
@@ -84,7 +83,7 @@ pacientesRouter.post('/', upload.single('arquivo'), validate(pacienteSchema), as
     acao: 'criar',
     usuario_email: getRequestEmail(req),
     valor_novo: nome,
-    documentacao_url: arquivoUrl,
+    documentacao_url: null,
     payload: JSON.stringify(created),
   }).execute()
 
@@ -92,7 +91,7 @@ pacientesRouter.post('/', upload.single('arquivo'), validate(pacienteSchema), as
 })
 
 // ── PUT /:id — Editar paciente ──
-pacientesRouter.put('/:id', upload.single('arquivo'), validate(pacienteSchema), async (req, res) => {
+pacientesRouter.put('/:id', validate(pacienteSchema), async (req, res) => {
   const db = getKysely()
   const { id } = req.params
   const { nome, data_nascimento, convenio, modalidade, observacoes, justificativa } = req.body as Paciente & { justificativa?: string }
@@ -100,7 +99,6 @@ pacientesRouter.put('/:id', upload.single('arquivo'), validate(pacienteSchema), 
   const antes = await db.selectFrom('pacientes').selectAll().where('id', '=', id).executeTakeFirst()
   if (!antes) throw new NotFoundError('Paciente', id)
 
-  const arquivoUrl = req.file ? `/uploads/${req.file.filename}` : null
 
   await db.updateTable('pacientes')
     .set({
@@ -123,7 +121,7 @@ pacientesRouter.put('/:id', upload.single('arquivo'), validate(pacienteSchema), 
     justificativa: justificativa || null,
     valor_anterior: antes.nome,
     valor_novo: nome,
-    documentacao_url: arquivoUrl,
+    documentacao_url: null,
     payload: JSON.stringify({ antes, depois }),
   }).execute()
 
@@ -131,7 +129,7 @@ pacientesRouter.put('/:id', upload.single('arquivo'), validate(pacienteSchema), 
 })
 
 // ── DELETE /:id — Soft delete (desativar) ──
-pacientesRouter.delete('/:id', upload.single('arquivo'), async (req, res) => {
+pacientesRouter.delete('/:id', async (req, res) => {
   const db = getKysely()
   const { id } = req.params
   const { justificativa, motivo, indicador } = req.body as {
@@ -141,7 +139,7 @@ pacientesRouter.delete('/:id', upload.single('arquivo'), async (req, res) => {
   const antes = await db.selectFrom('pacientes').selectAll().where('id', '=', id).executeTakeFirst()
   if (!antes) throw new NotFoundError('Paciente', id)
 
-  const arquivoUrl = req.file ? `/uploads/${req.file.filename}` : null
+
 
   await db.updateTable('pacientes')
     .set({
@@ -161,7 +159,7 @@ pacientesRouter.delete('/:id', upload.single('arquivo'), async (req, res) => {
     usuario_email: getRequestEmail(req),
     justificativa: justificativa || null,
     valor_anterior: antes.nome,
-    documentacao_url: arquivoUrl,
+    documentacao_url: null,
     payload: JSON.stringify({ antes, motivo, indicador }),
   }).execute()
 
@@ -169,7 +167,7 @@ pacientesRouter.delete('/:id', upload.single('arquivo'), async (req, res) => {
 })
 
 // ── PUT /:id/reativar ──
-pacientesRouter.put('/:id/reativar', upload.single('arquivo'), async (req, res) => {
+pacientesRouter.put('/:id/reativar', async (req, res) => {
   const db = getKysely()
   const { id } = req.params
   const { justificativa } = req.body as { justificativa?: string }
@@ -181,7 +179,7 @@ pacientesRouter.put('/:id/reativar', upload.single('arquivo'), async (req, res) 
     return
   }
 
-  const arquivoUrl = req.file ? `/uploads/${req.file.filename}` : null
+
 
   await db.updateTable('pacientes')
     .set({
@@ -203,7 +201,7 @@ pacientesRouter.put('/:id/reativar', upload.single('arquivo'), async (req, res) 
     usuario_email: getRequestEmail(req),
     justificativa: justificativa || null,
     valor_novo: antes.nome,
-    documentacao_url: arquivoUrl,
+    documentacao_url: null,
     payload: JSON.stringify({ antes, depois }),
   }).execute()
 
@@ -211,7 +209,7 @@ pacientesRouter.put('/:id/reativar', upload.single('arquivo'), async (req, res) 
 })
 
 // ── PUT /:id/transferir — Transferir paciente de convênio ──
-pacientesRouter.put('/:id/transferir', upload.single('arquivo'), async (req, res) => {
+pacientesRouter.put('/:id/transferir', async (req, res) => {
   const db = getKysely()
   const { id } = req.params
   const { convenio, justificativa } = req.body as { convenio: 'Camperj' | 'Unimed'; justificativa?: string }
@@ -219,7 +217,7 @@ pacientesRouter.put('/:id/transferir', upload.single('arquivo'), async (req, res
   const antes = await db.selectFrom('pacientes').selectAll().where('id', '=', id).executeTakeFirst()
   if (!antes) throw new NotFoundError('Paciente', id)
 
-  const arquivoUrl = req.file ? `/uploads/${req.file.filename}` : null
+
 
   await db.updateTable('pacientes')
     .set({ convenio, atualizado_em: now() })
@@ -238,7 +236,7 @@ pacientesRouter.put('/:id/transferir', upload.single('arquivo'), async (req, res
     justificativa: justificativa || null,
     valor_anterior: antes.convenio,
     valor_novo: convenio,
-    documentacao_url: arquivoUrl,
+    documentacao_url: null,
     payload: JSON.stringify({ antes, depois }),
   }).execute()
 

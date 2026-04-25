@@ -152,19 +152,19 @@ export function PacientesPage() {
   const salvar = async () => {
     if (!form.nome.trim() || !form.convenio.trim()) return
 
-    const fd = new FormData()
-    fd.append('nome', form.nome)
-    fd.append('convenio', form.convenio)
-    fd.append('modalidade', form.modalidade)
-    if (form.data_nascimento) fd.append('data_nascimento', form.data_nascimento)
-    if (form.observacoes) fd.append('observacoes', form.observacoes)
-    if (arquivoForm) fd.append('arquivo', arquivoForm)
+    const payload = {
+      nome: form.nome,
+      convenio: form.convenio,
+      modalidade: form.modalidade,
+      data_nascimento: form.data_nascimento || null,
+      observacoes: form.observacoes || null,
+    }
 
     try {
       if (editandoId) {
-        await api.put(`/pacientes/${editandoId}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+        await api.put(`/pacientes/${editandoId}`, payload)
       } else {
-        await api.post('/pacientes', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+        await api.post('/pacientes', payload)
       }
       await fetchPacientes()
       setModalAberto(false)
@@ -178,10 +178,12 @@ export function PacientesPage() {
   const excluir = async (id: string) => {
     if (!justificativaExcluir.trim()) return
     try {
-      const fd = new FormData()
-      fd.append('justificativa', justificativaExcluir)
-      if (arquivoExcluir) fd.append('arquivo', arquivoExcluir)
-      await api.post(`/pacientes/${id}/excluir`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      await api.delete(`/pacientes/${id}`, {
+        data: {
+          justificativa: justificativaExcluir,
+          motivo: justificativaExcluir,
+        },
+      })
       await fetchPacientes()
     } catch (err) {
       console.error('Erro ao excluir paciente:', err)
@@ -194,11 +196,13 @@ export function PacientesPage() {
   const desativar = async (id: string) => {
     if (!justDesativar.trim()) return
     try {
-      const fd = new FormData()
-      fd.append('justificativa', justDesativar)
-      if (indicadorDesativar) fd.append('indicador_codigo', indicadorDesativar)
-      if (arquivoDesativar) fd.append('arquivo', arquivoDesativar)
-      await api.post(`/pacientes/${id}/desativar`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      await api.delete(`/pacientes/${id}`, {
+        data: {
+          justificativa: justDesativar,
+          motivo: justDesativar,
+          indicador: indicadorDesativar || undefined,
+        },
+      })
       await fetchPacientes()
     } catch (err) {
       console.error('Erro ao desativar paciente:', err)
@@ -208,7 +212,7 @@ export function PacientesPage() {
 
   const reativar = async (id: string) => {
     try {
-      await api.post(`/pacientes/${id}/reativar`)
+      await api.put(`/pacientes/${id}/reativar`, {})
       await fetchPacientes()
     } catch (err) {
       console.error('Erro ao reativar paciente:', err)
