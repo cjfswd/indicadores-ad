@@ -4,10 +4,14 @@ const ENTIDADE_LABELS = { evento_paciente: 'Evento Clínico', registro_mensal: '
 <div class="modal-backdrop" onclick="if(event.target===this)closeModal()">
   <div class="modal-content" style="max-width:24rem">
     <h3 style="margin-bottom:.75rem">Reverter <%= acao %> de <%= ENTIDADE_LABELS[entidade] || entidade %>?</h3>
-    <form hx-post="/auditoria/<%= id %>/reverter" hx-target="#auditoria-content" hx-swap="innerHTML">
+    <form hx-post="/auditoria/<%= id %>/reverter" hx-target="#auditoria-content" hx-swap="innerHTML" hx-encoding="multipart/form-data">
       <div class="form-group" style="margin-bottom:1rem">
         <label class="form-label">Justificativa *</label>
         <textarea name="justificativa" class="form-textarea" placeholder="Motivo da reversão..." rows="3" required></textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:1rem">
+        <label class="form-label">Documento comprobatório <span style="color:var(--color-text-muted);opacity:.6">(opcional)</span></label>
+        <input type="file" name="arquivo" class="form-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>

@@ -1,5 +1,8 @@
 import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
+import multer from 'multer'
+import path from 'path'
+import fs from 'fs'
 import { getKysely } from '../config/database.js'
 import { getRequestEmail } from '../lib/request-user.js'
 import { now } from '../lib/sql-helpers.js'
@@ -10,11 +13,14 @@ function triggerToast(res: import('express').Response, message: string) {
   res.setHeader('HX-Trigger', JSON.stringify({ showToast: { message } }))
 }
 
-const INDICADORES_DESATIVACAO = [
-  { codigo: '01', nome: 'Alta Domiciliar' },
-  { codigo: '03', nome: 'Internação Hospitalar' },
-  { codigo: '04', nome: 'Óbito' },
-]
+// Upload config
+const UPLOAD_DIR = path.resolve('uploads')
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true })
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
+  filename: (_req, file, cb) => cb(null, `${uuid()}${path.extname(file.originalname)}`),
+})
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } })
 
 function calcularIdade(dataNasc: string | null) {
   if (!dataNasc) return null
@@ -46,7 +52,7 @@ async function loadPacienteData(db: ReturnType<typeof getKysely>, filtroStatus: 
   }
 
   const convenios = [...new Set(pacientes.map(p => p.convenio))].sort()
-  return { pacientes, agrupados, convenios, filtroStatus, busca, calcularIdade, INDICADORES_DESATIVACAO }
+  return { pacientes, agrupados, convenios, filtroStatus, busca, calcularIdade }
 }
 
 // GET /pacientes — full page
@@ -93,10 +99,12 @@ pacientesViewRouter.get('/:id/modal/excluir', (_req, res) => {
   res.render('modals/paciente-excluir', { layout: false, id: _req.params.id })
 })
 
-pacientesViewRouter.post('/', async (req, res) => {
+// POST /pacientes — create
+pacientesViewRouter.post('/', upload.single('arquivo'), async (req, res) => {
   const db = getKysely()
   const { nome, convenio, modalidade, data_nascimento, observacoes } = req.body
   const id = uuid()
+  const arquivoUrl = req.file ? `/uploads/${req.file.filename}` : null
 
   await db.insertInto('pacientes').values({
     id, nome, convenio: convenio ?? 'Camperj', modalidade: modalidade ?? 'AD',
@@ -106,6 +114,7 @@ pacientesViewRouter.post('/', async (req, res) => {
   await db.insertInto('audit_log').values({
     id: uuid(), entidade: 'paciente', entidade_id: id,
     acao: 'criar', usuario_email: getRequestEmail(req), valor_novo: nome,
+    documentacao_url: arquivoUrl,
   }).execute()
 
   const data = await loadPacienteData(db, 'ativo')
@@ -114,10 +123,11 @@ pacientesViewRouter.post('/', async (req, res) => {
 })
 
 // PUT /pacientes/:id — edit
-pacientesViewRouter.put('/:id', async (req, res) => {
+pacientesViewRouter.put('/:id', upload.single('arquivo'), async (req, res) => {
   const db = getKysely()
   const { id } = req.params
   const { nome, convenio, modalidade, data_nascimento, observacoes } = req.body
+  const arquivoUrl = req.file ? `/uploads/${req.file.filename}` : null
 
   const antes = await db.selectFrom('pacientes').selectAll().where('id', '=', id).executeTakeFirst()
   if (!antes) { res.status(404).send('Não encontrado'); return }
@@ -133,6 +143,7 @@ pacientesViewRouter.put('/:id', async (req, res) => {
     acao: 'editar', usuario_email: getRequestEmail(req),
     valor_anterior: antes.nome, valor_novo: nome,
     payload: JSON.stringify({ antes, depois }),
+    documentacao_url: arquivoUrl,
   }).execute()
 
   const data = await loadPacienteData(db, 'ativo')
@@ -141,10 +152,11 @@ pacientesViewRouter.put('/:id', async (req, res) => {
 })
 
 // PUT /pacientes/:id/desativar
-pacientesViewRouter.put('/:id/desativar', async (req, res) => {
+pacientesViewRouter.put('/:id/desativar', upload.single('arquivo'), async (req, res) => {
   const db = getKysely()
   const { id } = req.params
   const { justificativa, indicador } = req.body
+  const arquivoUrl = req.file ? `/uploads/${req.file.filename}` : null
 
   const antes = await db.selectFrom('pacientes').selectAll().where('id', '=', id).executeTakeFirst()
   if (!antes) { res.status(404).send('Não encontrado'); return }
@@ -161,6 +173,7 @@ pacientesViewRouter.put('/:id/desativar', async (req, res) => {
     acao: 'desativar', usuario_email: getRequestEmail(req),
     justificativa: justificativa || null, valor_anterior: antes.nome,
     payload: JSON.stringify({ antes, motivo: justificativa, indicador }),
+    documentacao_url: arquivoUrl,
   }).execute()
 
   const data = await loadPacienteData(db, 'ativo')
@@ -192,10 +205,11 @@ pacientesViewRouter.put('/:id/reativar', async (req, res) => {
 })
 
 // POST /pacientes/:id/excluir
-pacientesViewRouter.post('/:id/excluir', async (req, res) => {
+pacientesViewRouter.post('/:id/excluir', upload.single('arquivo'), async (req, res) => {
   const db = getKysely()
   const { id } = req.params
   const { justificativa } = req.body
+  const arquivoUrl = req.file ? `/uploads/${req.file.filename}` : null
 
   if (!justificativa?.trim()) { res.status(400).send('Justificativa obrigatória'); return }
 
@@ -209,6 +223,7 @@ pacientesViewRouter.post('/:id/excluir', async (req, res) => {
     acao: 'excluir', usuario_email: getRequestEmail(req),
     justificativa, valor_anterior: antes.nome,
     payload: JSON.stringify({ antes }),
+    documentacao_url: arquivoUrl,
   }).execute()
 
   const data = await loadPacienteData(db, 'ativo')

@@ -1,5 +1,8 @@
 import { Router } from 'express'
 import { v4 as uuid } from 'uuid'
+import multer from 'multer'
+import path from 'path'
+import fs from 'fs'
 import { getKysely } from '../config/database.js'
 import { getRequestEmail } from '../lib/request-user.js'
 import { now } from '../lib/sql-helpers.js'
@@ -10,6 +13,17 @@ export const auditoriaViewRouter = Router()
 function triggerToast(res: import('express').Response, message: string) {
   res.setHeader('HX-Trigger', JSON.stringify({ showToast: { message } }))
 }
+
+// Upload config
+const UPLOAD_DIR = path.resolve('uploads')
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true })
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
+  filename: (_req, file, cb) => cb(null, `${uuid()}${path.extname(file.originalname)}`),
+})
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } })
+
+
 
 const POR_PAGINA = 20
 
@@ -70,7 +84,7 @@ auditoriaViewRouter.get('/:id/modal/reverter', async (req, res) => {
 })
 
 // POST /auditoria/:id/reverter — generic reversal handler
-auditoriaViewRouter.post('/:id/reverter', async (req, res) => {
+auditoriaViewRouter.post('/:id/reverter', upload.single('arquivo'), async (req, res) => {
   const db = getKysely()
   const { id } = req.params
   const justificativa = String(req.body?.justificativa ?? '')
