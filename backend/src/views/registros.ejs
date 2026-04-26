@@ -57,5 +57,5 @@ const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Ag
 
 <!-- Conteúdo principal -->
 <div id="registro-content">
-  <%- content %>
+  <%- include('./components/registro-detail', { eventos, valores, pacientes, statusReg, ano, mes, registroId }) %>
 </div>

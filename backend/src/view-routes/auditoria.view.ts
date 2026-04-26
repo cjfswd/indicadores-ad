@@ -7,7 +7,6 @@ import { getKysely } from '../config/database.js'
 import { getRequestEmail } from '../lib/request-user.js'
 import { now } from '../lib/sql-helpers.js'
 import { incrementarMetrica } from '../lib/campo-map.js'
-import { renderAuditoriaTable } from '../renderers/auditoria.renderer.js'
 
 export const auditoriaViewRouter = Router()
 
@@ -62,8 +61,7 @@ auditoriaViewRouter.get('/', async (req, res) => {
     filtroEntidade: req.query.filtroEntidade as string | undefined,
     filtroAcao: req.query.filtroAcao as string | undefined,
   })
-  const content = renderAuditoriaTable(data)
-  res.render('auditoria', { title: 'Auditoria', currentPath: '/auditoria', content, ...data })
+  res.render('auditoria', { title: 'Auditoria', currentPath: '/auditoria', ...data })
 })
 
 // GET /auditoria/content — HTMX partial
@@ -74,7 +72,7 @@ auditoriaViewRouter.get('/content', async (req, res) => {
     filtroEntidade: req.query.filtroEntidade as string | undefined,
     filtroAcao: req.query.filtroAcao as string | undefined,
   })
-  res.send(renderAuditoriaTable(data))
+  res.render('components/auditoria-table', { layout: false, ...data })
 })
 
 // GET /auditoria/:id/modal/reverter — revert confirm modal
@@ -197,5 +195,5 @@ auditoriaViewRouter.post('/:id/reverter', upload.single('arquivo'), async (req, 
 
   const data = await loadAuditData(db, { pagina: 1 })
   triggerToast(res, 'Ação revertida')
-  res.send(renderAuditoriaTable(data))
+  res.render('components/auditoria-table', { layout: false, ...data })
 })

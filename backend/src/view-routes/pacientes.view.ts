@@ -6,7 +6,6 @@ import fs from 'fs'
 import { getKysely } from '../config/database.js'
 import { getRequestEmail } from '../lib/request-user.js'
 import { now } from '../lib/sql-helpers.js'
-import { renderPacientesGrouped } from '../renderers/pacientes.renderer.js'
 
 export const pacientesViewRouter = Router()
 
@@ -22,6 +21,15 @@ const storage = multer.diskStorage({
   filename: (_req, file, cb) => cb(null, `${uuid()}${path.extname(file.originalname)}`),
 })
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } })
+
+function calcularIdade(dataNasc: string | null) {
+  if (!dataNasc) return null
+  const hoje = new Date(); const nasc = new Date(dataNasc)
+  let idade = hoje.getFullYear() - nasc.getFullYear()
+  const m = hoje.getMonth() - nasc.getMonth()
+  if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--
+  return idade
+}
 
 async function loadPacienteData(db: ReturnType<typeof getKysely>, filtroStatus: string, busca?: string, filtroConvenio?: string) {
   let query = db.selectFrom('pacientes').selectAll()
@@ -43,12 +51,8 @@ async function loadPacienteData(db: ReturnType<typeof getKysely>, filtroStatus: 
     agrupados[p.convenio].push(p)
   }
 
-  return { agrupados, filtroStatus, busca }
-}
-
-/** Renders grouped list HTML and sends it */
-function sendGroupedHtml(res: import('express').Response, data: Awaited<ReturnType<typeof loadPacienteData>>) {
-  res.send(renderPacientesGrouped({ agrupados: data.agrupados, filtroStatus: data.filtroStatus }))
+  const convenios = [...new Set(pacientes.map(p => p.convenio))].sort()
+  return { pacientes, agrupados, convenios, filtroStatus, busca, calcularIdade }
 }
 
 // GET /pacientes — full page
@@ -56,18 +60,17 @@ pacientesViewRouter.get('/', async (req, res) => {
   const db = getKysely()
   const filtroStatus = (req.query.filtroStatus as string) ?? 'ativo'
   const data = await loadPacienteData(db, filtroStatus)
-  const content = renderPacientesGrouped({ agrupados: data.agrupados, filtroStatus })
-  res.render('pacientes', { title: 'Pacientes', currentPath: '/pacientes', content, filtroStatus })
+  res.render('pacientes', { title: 'Pacientes', currentPath: '/pacientes', ...data })
 })
 
-// GET /pacientes/content — HTMX partial
+// GET /pacientes/content — HTMX partial (grouped list)
 pacientesViewRouter.get('/content', async (req, res) => {
   const db = getKysely()
   const filtroStatus = (req.query.filtroStatus as string) ?? 'ativo'
   const busca = req.query.busca as string | undefined
   const filtroConvenio = req.query.filtroConvenio as string | undefined
   const data = await loadPacienteData(db, filtroStatus, busca, filtroConvenio)
-  sendGroupedHtml(res, data)
+  res.render('components/pacientes-grouped', { layout: false, ...data })
 })
 
 // GET /pacientes/modal/novo — empty form modal
@@ -116,7 +119,7 @@ pacientesViewRouter.post('/', upload.single('arquivo'), async (req, res) => {
 
   const data = await loadPacienteData(db, 'ativo')
   triggerToast(res, 'Paciente cadastrado!')
-  sendGroupedHtml(res, data)
+  res.render('components/pacientes-grouped', { layout: false, ...data })
 })
 
 // PUT /pacientes/:id — edit
@@ -145,7 +148,7 @@ pacientesViewRouter.put('/:id', upload.single('arquivo'), async (req, res) => {
 
   const data = await loadPacienteData(db, 'ativo')
   triggerToast(res, 'Paciente atualizado!')
-  sendGroupedHtml(res, data)
+  res.render('components/pacientes-grouped', { layout: false, ...data })
 })
 
 // PUT /pacientes/:id/desativar
@@ -175,7 +178,7 @@ pacientesViewRouter.put('/:id/desativar', upload.single('arquivo'), async (req, 
 
   const data = await loadPacienteData(db, 'ativo')
   triggerToast(res, 'Paciente desativado')
-  sendGroupedHtml(res, data)
+  res.render('components/pacientes-grouped', { layout: false, ...data })
 })
 
 // PUT /pacientes/:id/reativar
@@ -198,7 +201,7 @@ pacientesViewRouter.put('/:id/reativar', async (req, res) => {
 
   const data = await loadPacienteData(db, 'ativo')
   triggerToast(res, 'Paciente reativado!')
-  sendGroupedHtml(res, data)
+  res.render('components/pacientes-grouped', { layout: false, ...data })
 })
 
 // POST /pacientes/:id/excluir
@@ -225,5 +228,5 @@ pacientesViewRouter.post('/:id/excluir', upload.single('arquivo'), async (req, r
 
   const data = await loadPacienteData(db, 'ativo')
   triggerToast(res, 'Paciente excluído')
-  sendGroupedHtml(res, data)
+  res.render('components/pacientes-grouped', { layout: false, ...data })
 })

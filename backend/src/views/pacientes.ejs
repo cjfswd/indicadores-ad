@@ -1,42 +1,63 @@
+<%
+function calcularIdade(dataNasc) {
+  if (!dataNasc) return null;
+  const hoje = new Date(); const nasc = new Date(dataNasc);
+  let idade = hoje.getFullYear() - nasc.getFullYear();
+  const m = hoje.getMonth() - nasc.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
+  return idade;
+}
+const convenios = [...new Set(pacientes.map(p => p.convenio))].sort();
+const agrupados = {};
+pacientes.forEach(p => { if (!agrupados[p.convenio]) agrupados[p.convenio] = []; agrupados[p.convenio].push(p); });
+%>
+
 <div class="page-header">
   <div class="flex items-center gap-3">
-    <div style="width:2.5rem;height:2.5rem;border-radius:var(--radius-md);background:rgba(59,130,246,.15);color:#60a5fa;display:flex;align-items:center;justify-content:center">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    <div style="width:2.5rem;height:2.5rem;border-radius:var(--radius-md);background:rgba(139,92,246,.15);color:#a78bfa;display:flex;align-items:center;justify-content:center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     </div>
     <div>
       <h2>Pacientes</h2>
-      <p>Gerenciamento de pacientes e status clínico</p>
+      <p><%= pacientes.length %> <%= filtroStatus === 'ativo' ? 'ativos' : filtroStatus === 'inativo' ? 'inativos' : 'pacientes' %> · <%= convenios.length %> convênios</p>
     </div>
   </div>
   <button class="btn btn-primary"
-          hx-get="/pacientes/modal/novo"
-          hx-target="#modal-container" hx-swap="innerHTML">
+          hx-get="/pacientes/modal/novo" hx-target="#modal-container" hx-swap="innerHTML">
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Novo Paciente
   </button>
 </div>
 
-<!-- Search + Filters -->
-<div class="glass-card no-hover" style="padding:.75rem 1rem">
+<!-- Filtros -->
+<div class="glass-card no-hover" style="padding:.75rem 1rem;position:relative;z-index:10">
   <div class="flex items-center gap-3" style="flex-wrap:wrap">
-    <input type="search" class="form-input" style="flex:1;min-width:180px" name="busca" placeholder="Buscar por nome..."
-           hx-get="/pacientes/content" hx-target="#pacientes-content" hx-trigger="input changed delay:300ms"
-           hx-include="[name='filtroStatus'],[name='filtroConvenio']">
-    <select class="form-select" style="width:auto" name="filtroStatus"
-            hx-get="/pacientes/content" hx-target="#pacientes-content" hx-include="[name='busca'],[name='filtroConvenio']">
-      <option value="ativo">Ativos</option>
-      <option value="todos">Todos</option>
-      <option value="inativo">Inativos</option>
-    </select>
+    <div style="flex:1;min-width:200px">
+      <input type="search" class="form-input" placeholder="Buscar por nome..." name="busca" value="<%= typeof busca !== 'undefined' ? busca : '' %>"
+             hx-get="/pacientes/content" hx-trigger="keyup changed delay:400ms, search"
+             hx-target="#pacientes-content" hx-include="[name='filtroStatus'],[name='filtroConvenio']">
+    </div>
     <select class="form-select" style="width:auto" name="filtroConvenio"
             hx-get="/pacientes/content" hx-target="#pacientes-content" hx-include="[name='busca'],[name='filtroStatus']">
       <option value="todos">Todos convênios</option>
-      <option value="Camperj">Camperj</option>
-      <option value="Unimed">Unimed</option>
+      <% convenios.forEach(function(c) { %>
+        <option value="<%= c %>"><%= c %></option>
+      <% }) %>
     </select>
+    <div class="filter-tabs" id="pac-status-filter">
+      <% ['ativo','inativo','todos'].forEach(function(s) { %>
+        <button class="filter-tab <%= s === filtroStatus ? 'active' : '' %>"
+                hx-get="/pacientes/content?filtroStatus=<%= s %>"
+                hx-target="#pacientes-content" hx-include="[name='busca'],[name='filtroConvenio']"
+                onclick="document.querySelectorAll('#pac-status-filter .filter-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.querySelector('[name=filtroStatus]').value='<%= s %>'">
+          <%= s === 'ativo' ? 'Ativos' : s === 'inativo' ? 'Inativos' : 'Todos' %>
+        </button>
+      <% }) %>
+      <input type="hidden" name="filtroStatus" value="<%= filtroStatus %>">
+    </div>
   </div>
 </div>
 
 <div id="pacientes-content">
-  <%- content %>
+  <%- include('./components/pacientes-grouped', { pacientes, agrupados, convenios, calcularIdade }) %>
 </div>

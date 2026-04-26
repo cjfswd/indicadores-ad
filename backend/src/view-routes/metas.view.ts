@@ -6,7 +6,6 @@ import fs from 'fs'
 import { getKysely } from '../config/database.js'
 import { getRequestEmail } from '../lib/request-user.js'
 import { now } from '../lib/sql-helpers.js'
-import { renderMetasTable } from '../renderers/metas.renderer.js'
 
 export const metasViewRouter = Router()
 
@@ -28,11 +27,10 @@ metasViewRouter.get('/', async (req, res) => {
   const db = getKysely()
   const ano = Number(req.query.ano) || new Date().getFullYear()
   const metas = await db.selectFrom('metas').selectAll().where('ano', '=', ano).orderBy('indicador_codigo').execute()
-  const content = renderMetasTable({ metas, ano })
-  res.render('metas', { title: 'Metas', currentPath: '/metas', ano, content })
+  res.render('metas', { title: 'Metas', currentPath: '/metas', ano, metas })
 })
 
-// GET /metas/modal/editar — meta form modal
+// GET /metas/modal/editar — meta form modal (pre-populated or empty)
 metasViewRouter.get('/modal/editar', async (req, res) => {
   const db = getKysely()
   const ano = Number(req.query.ano) || new Date().getFullYear()
@@ -45,7 +43,7 @@ metasViewRouter.get('/modal/editar', async (req, res) => {
   res.render('modals/meta-form', { layout: false, meta, ano })
 })
 
-// PUT /metas — create or update
+// PUT /metas — create or update (upsert by indicador_codigo + ano)
 metasViewRouter.put('/', upload.single('arquivo'), async (req, res) => {
   const db = getKysely()
   const { indicador_codigo, sentido } = req.body
@@ -95,5 +93,5 @@ metasViewRouter.put('/', upload.single('arquivo'), async (req, res) => {
 
   const metas = await db.selectFrom('metas').selectAll().where('ano', '=', ano).orderBy('indicador_codigo').execute()
   triggerToast(res, 'Meta salva!')
-  res.send(renderMetasTable({ metas, ano }))
+  res.render('components/metas-table', { layout: false, metas, ano })
 })
