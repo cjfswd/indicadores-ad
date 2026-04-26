@@ -158,8 +158,8 @@ pacientesViewRouter.put('/:id/reativar', async (req, res) => {
   res.render('components/pacientes-grouped', { layout: false, ...data })
 })
 
-// DELETE /pacientes/:id
-pacientesViewRouter.delete('/:id', async (req, res) => {
+// POST /pacientes/:id/excluir
+pacientesViewRouter.post('/:id/excluir', async (req, res) => {
   const db = getKysely()
   const { id } = req.params
   const { justificativa } = req.body

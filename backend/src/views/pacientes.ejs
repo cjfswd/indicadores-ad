@@ -203,7 +203,7 @@ function openDesativarModal(id, nome) {
 }
 function openExcluirModal(id) {
   const form = document.getElementById('form-excluir');
-  form.setAttribute('hx-delete', '/pacientes/' + id);
+  form.setAttribute('hx-post', '/pacientes/' + id + '/excluir');
   htmx.process(form);
   document.getElementById('modal-excluir').style.display = 'flex';
 }
