@@ -16,7 +16,7 @@ const sortedConvenios = Object.keys(agrupados).sort();
         <!-- Grupo Header -->
         <button class="collapsible-header" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hidden')" style="border-radius:var(--radius-lg) var(--radius-lg) 0 0">
           <svg class="collapse-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-          <span style="font-size:.875rem;font-weight:600;color:var(--color-accent)"><%= conv %></span>
+          <span style="font-size:.875rem;font-weight:600;color:var(--color-text-primary)"><%= conv %></span>
           <span style="font-size:.75rem;color:var(--color-text-muted)">(<%= lista.length %>)</span>
           <span style="margin-left:auto;font-size:.75rem;color:var(--color-text-muted)">
             <%= ativos %> ativos<%= inativos > 0 ? ' · ' + inativos + ' inativos' : '' %>

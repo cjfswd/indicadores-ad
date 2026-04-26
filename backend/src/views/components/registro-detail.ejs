@@ -41,7 +41,7 @@ function fmtDate(d) { if (!d) return ''; const parts = d.split('-'); return part
 
 <div class="space-y-4">
   <% GRUPOS.forEach(function(grupo, gi) { %>
-    <div class="glass-card no-hover" style="overflow:hidden;animation:fadeIn .3s ease <%= gi * 40 %>ms both">
+    <div class="glass-card no-hover registro-group" style="animation:fadeIn .3s ease <%= gi * 40 %>ms both">
       <!-- Grupo Header -->
       <button class="collapsible-header" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hidden')">
         <span class="badge badge-muted" style="font-family:monospace;font-size:.7rem"><%= grupo.codigo %></span>

@@ -102,9 +102,9 @@ function canRevert(e) { return !e.revertido && ['criar','editar','confirmar','de
         <% } %>
 
         <!-- Payload Details -->
-        <details style="margin-top:.5rem">
-          <summary style="font-size:.625rem;color:var(--color-text-muted);cursor:pointer">📋 Detalhes da operação</summary>
-          <div style="margin-top:.375rem;font-size:.625rem;background:var(--color-surface-0);border-radius:var(--radius-md);border:1px solid var(--overlay-border);padding:.625rem;font-family:monospace;color:var(--color-text-muted);max-height:200px;overflow:auto;white-space:pre-wrap;word-break:break-all"><%
+        <details class="audit-details">
+          <summary>Detalhes da operação</summary>
+          <div class="audit-payload"><%
             try {
               const p = entry.payload ? JSON.parse(entry.payload) : { id: entry.id, entidade: entry.entidade, acao: entry.acao }
               %><%= JSON.stringify(p, null, 2) %><%

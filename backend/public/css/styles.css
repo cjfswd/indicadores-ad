@@ -357,6 +357,97 @@ a:hover { color: var(--color-accent-hover); }
 .collapsible-header.collapsed .collapse-chevron { transform: rotate(-90deg); }
 .collapsible-content.hidden { display: none; }
 
+/* ─── Registro Group Card (zero-pad wrapper) ─── */
+.registro-group {
+  overflow: hidden;
+  padding: 0;
+}
+
+/* ─── Styled Details / Summary (Auditoria) ─── */
+.audit-details {
+  margin-top: .5rem;
+  border: 1px solid var(--overlay-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.audit-details summary {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .5rem .75rem;
+  font-size: .75rem; font-weight: 500;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  background: rgba(30,41,59,.4);
+  transition: background .15s ease, color .15s ease;
+  list-style: none;
+  user-select: none;
+}
+.audit-details summary::-webkit-details-marker { display: none; }
+.audit-details summary::before {
+  content: '▸';
+  font-size: .75rem;
+  transition: transform .2s ease;
+  display: inline-block;
+}
+.audit-details[open] summary::before { transform: rotate(90deg); }
+.audit-details summary:hover {
+  background: rgba(71,85,105,.3);
+  color: var(--color-text-secondary);
+}
+.audit-details .audit-payload {
+  padding: .75rem;
+  font-size: .6875rem;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  background: var(--color-surface-0);
+  color: var(--color-text-muted);
+  max-height: 250px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.6;
+  border-top: 1px solid var(--overlay-border);
+}
+
+/* ─── Metas Card Row ─── */
+.meta-card {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.meta-card:hover {
+  border-color: var(--color-border-hover);
+  box-shadow: var(--shadow-card-hover);
+}
+.meta-card .meta-indicator {
+  display: flex; align-items: center; gap: .75rem; min-width: 0;
+}
+.meta-card .meta-stat {
+  text-align: center;
+  min-width: 70px;
+}
+.meta-card .meta-stat .meta-stat-label {
+  font-size: .625rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--color-text-muted);
+  margin-bottom: .25rem;
+}
+.meta-card .meta-stat .meta-stat-value {
+  font-size: 1.125rem; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 768px) {
+  .meta-card {
+    grid-template-columns: 1fr;
+    gap: .75rem;
+  }
+  .meta-card .meta-stat { text-align: left; }
+}
+
 /* ─── Evento Item (Timeline row) ─── */
 .evento-item {
   display: flex; align-items: flex-start; gap: .75rem;
