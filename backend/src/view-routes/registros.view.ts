@@ -82,15 +82,19 @@ async function loadRegistroData(db: ReturnType<typeof getKysely>, ano: number, m
   }
 }
 
-// GET /registros — full page (detail view for a specific month)
-registrosViewRouter.get('/', async (req, res) => {
-  const db = getKysely()
-  const now = new Date()
-  const ano = Number(req.query.ano) || now.getFullYear()
-  const mes = Number(req.query.mes) || (now.getMonth() + 1)
+// GET /registros — full page (pure HTML shell, content loaded by HTMX)
+registrosViewRouter.get('/', (_req, res) => {
+  res.render('registros', { title: 'Registros Mensais', currentPath: '/registros' })
+})
 
+// GET /registros/content — HTMX partial (action bar + detail)
+registrosViewRouter.get('/content', async (req, res) => {
+  const db = getKysely()
+  const hoje = new Date()
+  const ano = Number(req.query.regAno || req.query.ano) || hoje.getFullYear()
+  const mes = Number(req.query.regMes || req.query.mes) || (hoje.getMonth() + 1)
   const data = await loadRegistroData(db, ano, mes)
-  res.render('registros', { title: 'Registros Mensais', currentPath: '/registros', ...data })
+  res.render('components/registro-detail', { layout: false, ...data })
 })
 
 // GET /registros/modal/evento — event form modal

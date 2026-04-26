@@ -53,15 +53,9 @@ async function loadAuditData(db: ReturnType<typeof getKysely>, opts: {
   return { logs, total, pagina, totalPaginas, filtroEntidade: opts.filtroEntidade ?? '', filtroAcao: opts.filtroAcao ?? '' }
 }
 
-// GET /auditoria — full page
-auditoriaViewRouter.get('/', async (req, res) => {
-  const db = getKysely()
-  const data = await loadAuditData(db, {
-    pagina: Number(req.query.pagina) || 1,
-    filtroEntidade: req.query.filtroEntidade as string | undefined,
-    filtroAcao: req.query.filtroAcao as string | undefined,
-  })
-  res.render('auditoria', { title: 'Auditoria', currentPath: '/auditoria', ...data })
+// GET /auditoria — full page (pure HTML shell, content loaded by HTMX)
+auditoriaViewRouter.get('/', (_req, res) => {
+  res.render('auditoria', { title: 'Auditoria', currentPath: '/auditoria' })
 })
 
 // GET /auditoria/content — HTMX partial

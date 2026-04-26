@@ -55,12 +55,9 @@ async function loadPacienteData(db: ReturnType<typeof getKysely>, filtroStatus: 
   return { pacientes, agrupados, convenios, filtroStatus, busca, calcularIdade }
 }
 
-// GET /pacientes — full page
-pacientesViewRouter.get('/', async (req, res) => {
-  const db = getKysely()
-  const filtroStatus = (req.query.filtroStatus as string) ?? 'ativo'
-  const data = await loadPacienteData(db, filtroStatus)
-  res.render('pacientes', { title: 'Pacientes', currentPath: '/pacientes', ...data })
+// GET /pacientes — full page (pure HTML shell, content loaded by HTMX)
+pacientesViewRouter.get('/', (_req, res) => {
+  res.render('pacientes', { title: 'Pacientes', currentPath: '/pacientes' })
 })
 
 // GET /pacientes/content — HTMX partial (grouped list)

@@ -1,61 +1,41 @@
-<%
-const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-%>
-
 <div class="page-header">
   <div>
     <h2>Registro Mensal</h2>
     <p>Cada alteração é vinculada a um paciente com rastreabilidade completa</p>
   </div>
-  <span class="badge <%= statusReg === 'confirmado' ? 'badge-verde' : 'badge-amarelo' %>">
-    <%= statusReg === 'confirmado' ? '✓ Confirmado' : 'Rascunho' %>
-  </span>
 </div>
 
 <!-- Filtros -->
 <div class="glass-card no-hover" style="padding:0;overflow:hidden">
-  <form class="flex items-center gap-3" style="padding:.75rem 1rem;border-bottom:1px solid var(--overlay-border);background:var(--overlay-soft);flex-wrap:wrap"
-        action="/registros" method="GET">
+  <div class="flex items-center gap-3" style="padding:.75rem 1rem;border-bottom:1px solid var(--overlay-border);background:var(--overlay-soft);flex-wrap:wrap">
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    <select class="form-select" style="width:auto" name="mes" onchange="this.form.submit()">
-      <% meses.forEach(function(m, i) { %>
-        <option value="<%= i+1 %>" <%= (i+1) === mes ? 'selected' : '' %>><%= m %></option>
-      <% }) %>
+    <select class="form-select" style="width:auto" name="regMes"
+            hx-get="/registros/content" hx-target="#registro-content" hx-include="[name='regAno']">
+      <option value="1">Janeiro</option>
+      <option value="2">Fevereiro</option>
+      <option value="3">Março</option>
+      <option value="4">Abril</option>
+      <option value="5">Maio</option>
+      <option value="6">Junho</option>
+      <option value="7">Julho</option>
+      <option value="8">Agosto</option>
+      <option value="9">Setembro</option>
+      <option value="10">Outubro</option>
+      <option value="11">Novembro</option>
+      <option value="12">Dezembro</option>
     </select>
-    <select class="form-select" style="width:auto" name="ano" onchange="this.form.submit()">
-      <% for (let y = 2025; y <= 2027; y++) { %>
-        <option value="<%= y %>" <%= y === ano ? 'selected' : '' %>><%= y %></option>
-      <% } %>
+    <select class="form-select" style="width:auto" name="regAno"
+            hx-get="/registros/content" hx-target="#registro-content" hx-include="[name='regMes']">
+      <option value="2025">2025</option>
+      <option value="2026" selected>2026</option>
+      <option value="2027">2027</option>
     </select>
-  </form>
-</div>
-
-<!-- Action bar -->
-<div class="glass-card no-hover flex items-center" style="justify-content:space-between;padding:.75rem 1rem;flex-wrap:wrap;gap:.75rem">
-  <span style="font-size:.875rem;color:var(--color-text-muted)">
-    <strong style="color:var(--color-text-primary)"><%= eventos.length %></strong> evento<%= eventos.length !== 1 ? 's' : '' %> registrado<%= eventos.length !== 1 ? 's' : '' %> em <%= meses[mes-1] %>
-  </span>
-  <div class="flex gap-2" style="flex-wrap:wrap">
-    <a href="/api/v1/relatorio/excel/<%= ano %>/<%= mes %>" target="_blank" class="btn btn-secondary btn-sm">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Excel
-    </a>
-    <a href="/api/v1/relatorio/pdf/<%= ano %>/<%= mes %>" target="_blank" class="btn btn-primary btn-sm">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      PDF
-    </a>
-    <% if (statusReg !== 'confirmado' && registroId) { %>
-      <button class="btn btn-primary btn-sm" style="background:var(--color-semaforo-verde)"
-              hx-put="/registros/<%= registroId %>/confirmar"
-              hx-target="#registro-content"
-              hx-confirm="Confirmar o registro de <%= meses[mes-1] %>/<%= ano %>? Esta ação não pode ser desfeita facilmente.">
-        ✓ Confirmar Mês
-      </button>
-    <% } %>
   </div>
 </div>
 
-<!-- Conteúdo principal -->
-<div id="registro-content">
-  <%- include('./components/registro-detail', { eventos, valores, pacientes, statusReg, ano, mes, registroId }) %>
+<div id="registro-content"
+     hx-get="/registros/content"
+     hx-trigger="load"
+     hx-include="[name='regMes'],[name='regAno']"
+     hx-swap="innerHTML">
 </div>

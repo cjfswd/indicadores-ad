@@ -5,7 +5,7 @@
     </div>
     <div>
       <h2>Logs</h2>
-      <p>Histórico de todas as alterações — <%= total %> registro<%= total !== 1 ? 's' : '' %></p>
+      <p>Histórico de todas as alterações</p>
     </div>
   </div>
 </div>
@@ -18,10 +18,10 @@
       <select class="form-select" name="filtroEntidade"
               hx-get="/auditoria/content" hx-target="#auditoria-content" hx-include="[name='filtroAcao']">
         <option value="">Todas</option>
-        <option value="evento_paciente" <%= filtroEntidade === 'evento_paciente' ? 'selected' : '' %>>Eventos Clínicos</option>
-        <option value="registro_mensal" <%= filtroEntidade === 'registro_mensal' ? 'selected' : '' %>>Registros Mensais</option>
-        <option value="paciente" <%= filtroEntidade === 'paciente' ? 'selected' : '' %>>Pacientes</option>
-        <option value="meta" <%= filtroEntidade === 'meta' ? 'selected' : '' %>>Metas</option>
+        <option value="evento_paciente">Eventos Clínicos</option>
+        <option value="registro_mensal">Registros Mensais</option>
+        <option value="paciente">Pacientes</option>
+        <option value="meta">Metas</option>
       </select>
     </div>
     <div class="form-group" style="min-width:180px;margin:0">
@@ -29,24 +29,24 @@
       <select class="form-select" name="filtroAcao"
               hx-get="/auditoria/content" hx-target="#auditoria-content" hx-include="[name='filtroEntidade']">
         <option value="">Todas</option>
-        <option value="criar" <%= filtroAcao === 'criar' ? 'selected' : '' %>>Criar</option>
-        <option value="editar" <%= filtroAcao === 'editar' ? 'selected' : '' %>>Editar</option>
-        <option value="confirmar" <%= filtroAcao === 'confirmar' ? 'selected' : '' %>>Confirmar</option>
-        <option value="excluir" <%= filtroAcao === 'excluir' ? 'selected' : '' %>>Excluir / Reverter</option>
-        <option value="desativar" <%= filtroAcao === 'desativar' ? 'selected' : '' %>>Desativar</option>
-        <option value="reativar" <%= filtroAcao === 'reativar' ? 'selected' : '' %>>Reativar</option>
+        <option value="criar">Criar</option>
+        <option value="editar">Editar</option>
+        <option value="confirmar">Confirmar</option>
+        <option value="excluir">Excluir / Reverter</option>
+        <option value="desativar">Desativar</option>
+        <option value="reativar">Reativar</option>
       </select>
     </div>
-    <% if (filtroEntidade || filtroAcao) { %>
-      <button class="btn btn-sm btn-ghost" style="align-self:flex-end"
-              hx-get="/auditoria/content" hx-target="#auditoria-content"
-              hx-vals='{"filtroEntidade":"","filtroAcao":""}'>
-        ✕ Limpar filtros
-      </button>
-    <% } %>
+    <button class="btn btn-sm btn-ghost" style="align-self:flex-end"
+            hx-get="/auditoria/content" hx-target="#auditoria-content"
+            hx-vals='{"filtroEntidade":"","filtroAcao":""}'>
+      ✕ Limpar filtros
+    </button>
   </div>
 </div>
 
-<div id="auditoria-content">
-  <%- include('./components/auditoria-table', { logs, total, pagina, totalPaginas }) %>
+<div id="auditoria-content"
+     hx-get="/auditoria/content"
+     hx-trigger="load"
+     hx-swap="innerHTML">
 </div>

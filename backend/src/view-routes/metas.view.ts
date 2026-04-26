@@ -22,18 +22,23 @@ const storage = multer.diskStorage({
 })
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } })
 
-// GET /metas — full page
-metasViewRouter.get('/', async (req, res) => {
+// GET /metas — full page (pure HTML shell, content loaded by HTMX)
+metasViewRouter.get('/', (_req, res) => {
+  res.render('metas', { title: 'Metas', currentPath: '/metas' })
+})
+
+// GET /metas/content — HTMX partial (metas table)
+metasViewRouter.get('/content', async (req, res) => {
   const db = getKysely()
-  const ano = Number(req.query.ano) || new Date().getFullYear()
+  const ano = Number(req.query.metasAno || req.query.ano) || new Date().getFullYear()
   const metas = await db.selectFrom('metas').selectAll().where('ano', '=', ano).orderBy('indicador_codigo').execute()
-  res.render('metas', { title: 'Metas', currentPath: '/metas', ano, metas })
+  res.render('components/metas-table', { layout: false, metas, ano })
 })
 
 // GET /metas/modal/editar — meta form modal (pre-populated or empty)
 metasViewRouter.get('/modal/editar', async (req, res) => {
   const db = getKysely()
-  const ano = Number(req.query.ano) || new Date().getFullYear()
+  const ano = Number(req.query.metasAno || req.query.ano) || new Date().getFullYear()
   const codigo = req.query.indicador_codigo as string | undefined
   let meta = null
   if (codigo) {

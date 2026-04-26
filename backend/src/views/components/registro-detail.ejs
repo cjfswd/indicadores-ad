@@ -1,4 +1,5 @@
 <%
+const MESES_NOMES = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const GRUPOS = [
   { codigo: '01', titulo: 'Altas Domiciliares', campos: [
     { key: 'taxa_altas_pct', label: 'Altas', tipoEvento: 'alta' },
@@ -39,7 +40,38 @@ const eventosPorTipo = (tipo) => eventos.filter(e => e.tipo_evento === tipo);
 function fmtDate(d) { if (!d) return ''; const parts = d.split('-'); return parts[2]+'/'+parts[1]+'/'+parts[0]; }
 %>
 
+<!-- Action bar -->
+<div class="glass-card no-hover flex items-center" style="justify-content:space-between;padding:.75rem 1rem;flex-wrap:wrap;gap:.75rem">
+  <div class="flex items-center gap-3">
+    <span class="badge <%= statusReg === 'confirmado' ? 'badge-verde' : 'badge-amarelo' %>">
+      <%= statusReg === 'confirmado' ? '✓ Confirmado' : 'Rascunho' %>
+    </span>
+    <span style="font-size:.875rem;color:var(--color-text-muted)">
+      <strong style="color:var(--color-text-primary)"><%= eventos.length %></strong> evento<%= eventos.length !== 1 ? 's' : '' %> em <%= MESES_NOMES[mes] %>/<%= ano %>
+    </span>
+  </div>
+  <div class="flex gap-2" style="flex-wrap:wrap">
+    <a href="/api/v1/relatorio/excel/<%= ano %>/<%= mes %>" target="_blank" class="btn btn-secondary btn-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Excel
+    </a>
+    <a href="/api/v1/relatorio/pdf/<%= ano %>/<%= mes %>" target="_blank" class="btn btn-primary btn-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      PDF
+    </a>
+    <% if (!isLocked && registroId) { %>
+      <button class="btn btn-primary btn-sm" style="background:var(--color-semaforo-verde)"
+              hx-put="/registros/<%= registroId %>/confirmar"
+              hx-target="#registro-content"
+              hx-confirm="Confirmar o registro de <%= MESES_NOMES[mes] %>/<%= ano %>? Esta ação não pode ser desfeita facilmente.">
+        ✓ Confirmar Mês
+      </button>
+    <% } %>
+  </div>
+</div>
+
 <div class="space-y-4">
+
   <% GRUPOS.forEach(function(grupo, gi) { %>
     <div class="glass-card no-hover registro-group" style="animation:fadeIn .3s ease <%= gi * 40 %>ms both">
       <!-- Grupo Header -->
