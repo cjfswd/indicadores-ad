@@ -7,6 +7,7 @@ import { getKysely } from '../config/database.js'
 import { getRequestEmail } from '../lib/request-user.js'
 import { now } from '../lib/sql-helpers.js'
 import { incrementarMetrica } from '../lib/campo-map.js'
+import { renderRegistroDetail } from '../renderers/registro.renderer.js'
 import type { Insertable } from 'kysely'
 import type { RegistroMensalTable } from '../config/db.schema.js'
 
@@ -33,16 +34,6 @@ const CAMPOS_VALIDOS = new Set([
   'eventos_adversos_total', 'ea_quedas', 'ea_broncoaspiracao', 'ea_lesao_pressao',
   'ea_decanulacao', 'ea_saida_gtt', 'ouvidorias_total', 'ouv_elogios', 'ouv_sugestoes', 'ouv_reclamacoes',
 ])
-
-function parseBody(body: Record<string, string>) {
-  const clean: Record<string, unknown> = {}
-  for (const [k, v] of Object.entries(body)) {
-    if (CAMPOS_VALIDOS.has(k) && v !== '') {
-      clean[k] = k === 'ano' || k === 'mes' ? Number(v) : (v.includes('.') ? parseFloat(v) : parseInt(v, 10))
-    }
-  }
-  return clean
-}
 
 async function loadRegistroData(db: ReturnType<typeof getKysely>, ano: number, mes: number) {
   const registro = await db.selectFrom('registros_mensais').selectAll()
@@ -71,7 +62,6 @@ async function loadRegistroData(db: ReturnType<typeof getKysely>, ano: number, m
   }
 
   return {
-    registro,
     registroId: registro?.id ?? null,
     statusReg: (registro?.status ?? 'rascunho') as 'rascunho' | 'confirmado',
     valores,
@@ -82,15 +72,32 @@ async function loadRegistroData(db: ReturnType<typeof getKysely>, ano: number, m
   }
 }
 
-// GET /registros — full page (detail view for a specific month)
+/** Renders detail HTML and sends it */
+function sendDetailHtml(res: import('express').Response, data: Awaited<ReturnType<typeof loadRegistroData>>) {
+  res.send(renderRegistroDetail({
+    eventos: data.eventos as Parameters<typeof renderRegistroDetail>[0]['eventos'],
+    valores: data.valores,
+    statusReg: data.statusReg,
+    ano: data.ano,
+    mes: data.mes,
+  }))
+}
+
+// GET /registros — full page
 registrosViewRouter.get('/', async (req, res) => {
   const db = getKysely()
-  const now = new Date()
-  const ano = Number(req.query.ano) || now.getFullYear()
-  const mes = Number(req.query.mes) || (now.getMonth() + 1)
+  const hoje = new Date()
+  const ano = Number(req.query.ano) || hoje.getFullYear()
+  const mes = Number(req.query.mes) || (hoje.getMonth() + 1)
 
   const data = await loadRegistroData(db, ano, mes)
-  res.render('registros', { title: 'Registros Mensais', currentPath: '/registros', ...data })
+  const content = renderRegistroDetail({
+    eventos: data.eventos as Parameters<typeof renderRegistroDetail>[0]['eventos'],
+    valores: data.valores,
+    statusReg: data.statusReg,
+    ano, mes,
+  })
+  res.render('registros', { title: 'Registros Mensais', currentPath: '/registros', content, ...data })
 })
 
 // GET /registros/modal/evento — event form modal
@@ -104,12 +111,12 @@ registrosViewRouter.get('/modal/evento', async (req, res) => {
   res.render('modals/evento-form', { layout: false, tipoEvento, label, ano, mes, pacientes })
 })
 
-// GET /registros/modal/excluir-evento/:id — event delete confirm modal
+// GET /registros/modal/excluir-evento/:id
 registrosViewRouter.get('/modal/excluir-evento/:id', (req, res) => {
   res.render('modals/evento-excluir', { layout: false, id: req.params.id })
 })
 
-// POST /registros/eventos — create event (HTMX, returns partial)
+// POST /registros/eventos — create event
 registrosViewRouter.post('/eventos', upload.single('arquivo'), async (req, res) => {
   const db = getKysely()
   const { paciente_id, ano: anoStr, mes: mesStr, tipo_evento, descricao, data_evento } = req.body
@@ -121,7 +128,6 @@ registrosViewRouter.post('/eventos', upload.single('arquivo'), async (req, res) 
     return
   }
 
-  // Ensure registro exists
   let registro = await db.selectFrom('registros_mensais').select('id')
     .where('ano', '=', ano).where('mes', '=', mes).executeTakeFirst()
   if (!registro) {
@@ -151,10 +157,10 @@ registrosViewRouter.post('/eventos', upload.single('arquivo'), async (req, res) 
 
   const data = await loadRegistroData(db, ano, mes)
   triggerToast(res, 'Evento registrado!')
-  res.render('components/registro-detail', { layout: false, ...data })
+  sendDetailHtml(res, data)
 })
 
-// POST /registros/eventos/:id/reverter — soft delete event (HTMX)
+// POST /registros/eventos/:id/reverter — soft delete event
 registrosViewRouter.post('/eventos/:id/reverter', upload.single('arquivo'), async (req, res) => {
   const db = getKysely()
   const { id } = req.params
@@ -185,10 +191,10 @@ registrosViewRouter.post('/eventos/:id/reverter', upload.single('arquivo'), asyn
 
   const data = await loadRegistroData(db, evento.ano ?? new Date().getFullYear(), evento.mes ?? (new Date().getMonth() + 1))
   triggerToast(res, 'Evento removido')
-  res.render('components/registro-detail', { layout: false, ...data })
+  sendDetailHtml(res, data)
 })
 
-// PUT /registros/:id/confirmar — confirm record (HTMX)
+// PUT /registros/:id/confirmar
 registrosViewRouter.put('/:id/confirmar', async (req, res) => {
   const db = getKysely()
   const { id } = req.params
@@ -208,5 +214,5 @@ registrosViewRouter.put('/:id/confirmar', async (req, res) => {
 
   const data = await loadRegistroData(db, antes.ano, antes.mes)
   triggerToast(res, 'Mês confirmado!')
-  res.render('components/registro-detail', { layout: false, ...data })
+  sendDetailHtml(res, data)
 })
