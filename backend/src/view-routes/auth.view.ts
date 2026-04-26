@@ -4,14 +4,14 @@ export const authViewRouter = Router()
 
 // GET /login
 authViewRouter.get('/login', (_req, res) => {
-  res.render('login', { layout: false, error: null })
+  res.render('login', { error: null, layout: false })
 })
 
 // POST /login — simplified dev auth (in production, use Google OAuth)
 authViewRouter.post('/login', async (req, res) => {
   const { email } = req.body
   if (!email) {
-    res.render('login', { layout: false, error: 'Email é obrigatório' })
+    res.render('login', { error: 'Email é obrigatório', layout: false })
     return
   }
   // In dev mode, just redirect — no real auth needed

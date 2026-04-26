@@ -22,15 +22,6 @@ const storage = multer.diskStorage({
 })
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } })
 
-function calcularIdade(dataNasc: string | null) {
-  if (!dataNasc) return null
-  const hoje = new Date(); const nasc = new Date(dataNasc)
-  let idade = hoje.getFullYear() - nasc.getFullYear()
-  const m = hoje.getMonth() - nasc.getMonth()
-  if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--
-  return idade
-}
-
 async function loadPacienteData(db: ReturnType<typeof getKysely>, filtroStatus: string, busca?: string, filtroConvenio?: string) {
   let query = db.selectFrom('pacientes').selectAll()
 
@@ -51,8 +42,11 @@ async function loadPacienteData(db: ReturnType<typeof getKysely>, filtroStatus: 
     agrupados[p.convenio].push(p)
   }
 
-  const convenios = [...new Set(pacientes.map(p => p.convenio))].sort()
-  return { pacientes, agrupados, convenios, filtroStatus, busca, calcularIdade }
+  return { agrupados }
+}
+
+function sendGrouped(res: import('express').Response, agrupados: Record<string, Array<{ id: string; nome: string; convenio: string; modalidade: string; status: string; data_nascimento: string | null; motivo_desativacao: string | null }>>) {
+  res.render('partials/pacientes-list', { agrupados, layout: false })
 }
 
 // GET /pacientes — full page (pure HTML shell, content loaded by HTMX)
@@ -66,13 +60,13 @@ pacientesViewRouter.get('/content', async (req, res) => {
   const filtroStatus = (req.query.filtroStatus as string) ?? 'ativo'
   const busca = req.query.busca as string | undefined
   const filtroConvenio = req.query.filtroConvenio as string | undefined
-  const data = await loadPacienteData(db, filtroStatus, busca, filtroConvenio)
-  res.render('components/pacientes-grouped', { layout: false, ...data })
+  const { agrupados } = await loadPacienteData(db, filtroStatus, busca, filtroConvenio)
+  sendGrouped(res, agrupados)
 })
 
 // GET /pacientes/modal/novo — empty form modal
 pacientesViewRouter.get('/modal/novo', (_req, res) => {
-  res.render('modals/paciente-form', { layout: false })
+  res.render('modals/paciente-form', { paciente: null, layout: false })
 })
 
 // GET /pacientes/:id/modal/editar — pre-populated form modal
@@ -80,7 +74,7 @@ pacientesViewRouter.get('/:id/modal/editar', async (req, res) => {
   const db = getKysely()
   const paciente = await db.selectFrom('pacientes').selectAll().where('id', '=', req.params.id).executeTakeFirst()
   if (!paciente) { res.status(404).send('Não encontrado'); return }
-  res.render('modals/paciente-form', { layout: false, paciente })
+  res.render('modals/paciente-form', { paciente, layout: false })
 })
 
 // GET /pacientes/:id/modal/desativar
@@ -88,12 +82,12 @@ pacientesViewRouter.get('/:id/modal/desativar', async (req, res) => {
   const db = getKysely()
   const paciente = await db.selectFrom('pacientes').select(['id', 'nome']).where('id', '=', req.params.id).executeTakeFirst()
   if (!paciente) { res.status(404).send('Não encontrado'); return }
-  res.render('modals/paciente-desativar', { layout: false, id: paciente.id, nome: paciente.nome })
+  res.render('modals/paciente-desativar', { id: paciente.id, nome: paciente.nome, layout: false })
 })
 
 // GET /pacientes/:id/modal/excluir
 pacientesViewRouter.get('/:id/modal/excluir', (_req, res) => {
-  res.render('modals/paciente-excluir', { layout: false, id: _req.params.id })
+  res.render('modals/paciente-excluir', { id: _req.params.id, layout: false })
 })
 
 // POST /pacientes — create
@@ -114,9 +108,9 @@ pacientesViewRouter.post('/', upload.single('arquivo'), async (req, res) => {
     documentacao_url: arquivoUrl,
   }).execute()
 
-  const data = await loadPacienteData(db, 'ativo')
+  const { agrupados } = await loadPacienteData(db, 'ativo')
   triggerToast(res, 'Paciente cadastrado!')
-  res.render('components/pacientes-grouped', { layout: false, ...data })
+  sendGrouped(res, agrupados)
 })
 
 // PUT /pacientes/:id — edit
@@ -143,9 +137,9 @@ pacientesViewRouter.put('/:id', upload.single('arquivo'), async (req, res) => {
     documentacao_url: arquivoUrl,
   }).execute()
 
-  const data = await loadPacienteData(db, 'ativo')
+  const { agrupados } = await loadPacienteData(db, 'ativo')
   triggerToast(res, 'Paciente atualizado!')
-  res.render('components/pacientes-grouped', { layout: false, ...data })
+  sendGrouped(res, agrupados)
 })
 
 // PUT /pacientes/:id/desativar
@@ -173,9 +167,9 @@ pacientesViewRouter.put('/:id/desativar', upload.single('arquivo'), async (req, 
     documentacao_url: arquivoUrl,
   }).execute()
 
-  const data = await loadPacienteData(db, 'ativo')
+  const { agrupados } = await loadPacienteData(db, 'ativo')
   triggerToast(res, 'Paciente desativado')
-  res.render('components/pacientes-grouped', { layout: false, ...data })
+  sendGrouped(res, agrupados)
 })
 
 // PUT /pacientes/:id/reativar
@@ -196,9 +190,9 @@ pacientesViewRouter.put('/:id/reativar', async (req, res) => {
     acao: 'reativar', usuario_email: getRequestEmail(req), valor_novo: antes.nome,
   }).execute()
 
-  const data = await loadPacienteData(db, 'ativo')
+  const { agrupados } = await loadPacienteData(db, 'ativo')
   triggerToast(res, 'Paciente reativado!')
-  res.render('components/pacientes-grouped', { layout: false, ...data })
+  sendGrouped(res, agrupados)
 })
 
 // POST /pacientes/:id/excluir
@@ -223,7 +217,7 @@ pacientesViewRouter.post('/:id/excluir', upload.single('arquivo'), async (req, r
     documentacao_url: arquivoUrl,
   }).execute()
 
-  const data = await loadPacienteData(db, 'ativo')
+  const { agrupados } = await loadPacienteData(db, 'ativo')
   triggerToast(res, 'Paciente excluído')
-  res.render('components/pacientes-grouped', { layout: false, ...data })
+  sendGrouped(res, agrupados)
 })

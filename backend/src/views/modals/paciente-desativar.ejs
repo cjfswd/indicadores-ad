@@ -1,11 +1,4 @@
-<%
-const INDICADORES_DESATIVACAO = [
-  { codigo: '01', nome: 'Alta Domiciliar' },
-  { codigo: '03', nome: 'Internação Hospitalar' },
-  { codigo: '04', nome: 'Óbito' },
-];
-%>
-<div class="modal-backdrop" onclick="if(event.target===this)closeModal()">
+<div class="modal-backdrop" hx-on:click="if(event.target===this)closeModal()">
   <div class="modal-content" style="max-width:28rem">
     <div class="flex items-center gap-3" style="margin-bottom:1rem">
       <div style="width:2.5rem;height:2.5rem;border-radius:50%;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center">
@@ -27,9 +20,9 @@ const INDICADORES_DESATIVACAO = [
           <label class="form-label">Indicador vinculado <span style="color:var(--color-text-muted);opacity:.6">(opcional)</span></label>
           <select name="indicador" class="form-select">
             <option value="">Nenhum</option>
-            <% INDICADORES_DESATIVACAO.forEach(function(ind) { %>
-              <option value="<%= ind.codigo %>"><%= ind.codigo %> — <%= ind.nome %></option>
-            <% }) %>
+            <option value="01">01 — Alta Domiciliar</option>
+            <option value="03">03 — Internação Hospitalar</option>
+            <option value="04">04 — Óbito</option>
           </select>
         </div>
         <div class="form-group">
@@ -38,7 +31,7 @@ const INDICADORES_DESATIVACAO = [
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button type="button" class="btn btn-secondary" hx-on:click="closeModal()">Cancelar</button>
         <button type="submit" class="btn" style="background:#d97706;color:white">Desativar</button>
       </div>
     </form>

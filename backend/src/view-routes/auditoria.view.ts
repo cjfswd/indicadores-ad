@@ -66,7 +66,7 @@ auditoriaViewRouter.get('/content', async (req, res) => {
     filtroEntidade: req.query.filtroEntidade as string | undefined,
     filtroAcao: req.query.filtroAcao as string | undefined,
   })
-  res.render('components/auditoria-table', { layout: false, ...data })
+  res.render('partials/auditoria-table', { ...data, layout: false })
 })
 
 // GET /auditoria/:id/modal/reverter — revert confirm modal
@@ -74,7 +74,7 @@ auditoriaViewRouter.get('/:id/modal/reverter', async (req, res) => {
   const db = getKysely()
   const entry = await db.selectFrom('audit_log').select(['id', 'acao', 'entidade']).where('id', '=', req.params.id).executeTakeFirst()
   if (!entry) { res.status(404).send('Não encontrado'); return }
-  res.render('modals/auditoria-reverter', { layout: false, id: entry.id, acao: entry.acao, entidade: entry.entidade })
+  res.render('modals/auditoria-reverter', { id: entry.id, acao: entry.acao, entidade: entry.entidade, layout: false })
 })
 
 // POST /auditoria/:id/reverter — generic reversal handler
@@ -189,5 +189,5 @@ auditoriaViewRouter.post('/:id/reverter', upload.single('arquivo'), async (req, 
 
   const data = await loadAuditData(db, { pagina: 1 })
   triggerToast(res, 'Ação revertida')
-  res.render('components/auditoria-table', { layout: false, ...data })
+  res.render('partials/auditoria-table', { ...data, layout: false })
 })

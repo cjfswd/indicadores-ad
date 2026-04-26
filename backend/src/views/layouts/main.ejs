@@ -8,7 +8,10 @@
   <link rel="stylesheet" href="/css/styles.css">
   <script src="/js/htmx.min.js"></script>
 </head>
-<body>
+<body
+    hx-on:htmx:after-swap="(function(e){var msg=e.detail.xhr&&e.detail.xhr.getResponseHeader('HX-Trigger-After-Swap');if(msg){try{var d=JSON.parse(msg);showToast(d.message,d.type)}catch(ex){}}})(event)"
+    hx-on:htmx:response-error="showToast('Erro ao processar requisição','error')"
+    hx-on::show-toast="closeModal();if(event.detail&&event.detail.message)showToast(event.detail.message,event.detail.type||'success')">
   <div class="app-layout">
     <%- include('../partials/sidebar', { currentPath: typeof currentPath !== 'undefined' ? currentPath : '/' }) %>
     <main class="main-content animate-fade-in" id="main-content">
@@ -19,44 +22,18 @@
   <div id="modal-container"></div>
 
   <script>
-    // ─── Toast helper ───
-    function showToast(msg, type = 'success') {
-      const c = document.getElementById('toast-container');
-      const t = document.createElement('div');
+    // ─── Global Utilities (used by renderers via hx-on:click) ───
+    function showToast(msg, type) {
+      type = type || 'success';
+      var c = document.getElementById('toast-container');
+      var t = document.createElement('div');
       t.className = 'toast toast-' + type;
       t.textContent = msg;
       c.appendChild(t);
-      setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+      setTimeout(function() { t.style.opacity = '0'; setTimeout(function() { t.remove(); }, 300); }, 3000);
     }
-
-    // ─── HTMX after-swap toast ───
-    document.body.addEventListener('htmx:afterSwap', function(e) {
-      const msg = e.detail.xhr?.getResponseHeader('HX-Trigger-After-Swap');
-      if (msg) {
-        try { const d = JSON.parse(msg); showToast(d.message, d.type); } catch {}
-      }
-    });
-
-    // ─── HTMX error handler ───
-    document.body.addEventListener('htmx:responseError', function(e) {
-      showToast('Erro ao processar requisição', 'error');
-    });
-
-    // ─── Close modal ───
     function closeModal() { document.getElementById('modal-container').innerHTML = ''; }
-
-    // ─── Auto-close modal on HX-Trigger ───
-    document.body.addEventListener('showToast', function(e) {
-      closeModal();
-      if (e.detail && e.detail.message) showToast(e.detail.message, e.detail.type || 'success');
-    });
-
-    // ─── Mobile sidebar toggle ───
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('open');
-    }
-
-    // ─── Theme toggle ───
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
     function toggleTheme() {
       document.documentElement.classList.toggle('light');
       localStorage.setItem('theme', document.documentElement.classList.contains('light') ? 'light' : 'dark');

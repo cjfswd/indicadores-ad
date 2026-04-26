@@ -41,29 +41,37 @@ async function buildSemaforo(db: ReturnType<typeof getKysely>, ano: number, mes:
     }
   })
 
-  return { indicadores, registro }
+  return { indicadores, registro: registro as Record<string, unknown> | null }
 }
 
-// GET /dashboard — full page
-dashboardViewRouter.get('/', async (req, res) => {
+// GET /dashboard — page shell
+dashboardViewRouter.get('/', (_req, res) => {
+  res.render('dashboard', { title: 'Dashboard', currentPath: '/dashboard' })
+})
+
+// GET /dashboard/content — full dashboard content (HTMX)
+dashboardViewRouter.get('/content', async (req, res) => {
   const db = getKysely()
   const today = new Date()
   const ano = Number(req.query.ano) || today.getFullYear()
   const mes = Number(req.query.mes) || (today.getMonth() + 1)
 
   const { indicadores, registro } = await buildSemaforo(db, ano, mes)
-
-  res.render('dashboard', {
-    title: 'Dashboard', currentPath: '/dashboard',
-    ano, mes, indicadores, registro: registro ?? null,
+  const semaforoHtml = await new Promise<string>((resolve, reject) => {
+    req.app.render('partials/semaforo-grid', { indicadores, layout: false }, (err: Error | null, html: string) => {
+      if (err) return reject(err)
+      resolve(html)
+    })
   })
+
+  res.render('partials/dashboard-content', { ano, mes, registro, semaforoHtml, layout: false })
 })
 
-// GET /dashboard/semaforo — HTMX partial
+// GET /dashboard/semaforo — HTMX partial (just the grid)
 dashboardViewRouter.get('/semaforo', async (req, res) => {
   const db = getKysely()
   const ano = Number(req.query.ano) || new Date().getFullYear()
   const mes = Number(req.query.mes) || (new Date().getMonth() + 1)
   const { indicadores } = await buildSemaforo(db, ano, mes)
-  res.render('components/semaforo-grid', { layout: false, indicadores })
+  res.render('partials/semaforo-grid', { indicadores, layout: false })
 })

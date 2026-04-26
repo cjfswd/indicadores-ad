@@ -1,0 +1,51 @@
+<% if (metas.length === 0) { %>
+<div style="text-align:center;padding:4rem 0;color:var(--color-text-muted)">
+  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto .75rem;opacity:.3"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+  <p style="font-size:.875rem">Nenhuma meta definida para <%= ano %></p>
+</div>
+<% } else { %>
+<div class="space-y-3">
+  <% metas.forEach((m, i) => { %>
+    <% const sentido = SENTIDO_CONFIG[m.sentido] || SENTIDO_CONFIG.neutro %>
+    <% const icon = ICON_COLORS[m.indicador_codigo] || { color: '#94a3b8', bg: 'rgba(148,163,184,.15)' } %>
+    <div class="glass-card no-hover" style="padding:1rem 1.25rem;animation:fadeIn .3s ease <%= i * 40 %>ms both">
+      <div class="flex items-center" style="gap:1rem;flex-wrap:wrap;margin-bottom:.75rem">
+        <div class="flex items-center gap-3" style="flex:1;min-width:200px">
+          <div style="width:2.25rem;height:2.25rem;border-radius:var(--radius-md);background:<%= icon.bg %>;color:<%= icon.color %>;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="font-size:.75rem;font-weight:700;font-family:monospace"><%= m.indicador_codigo %></span>
+          </div>
+          <div style="min-width:0">
+            <p style="font-size:.875rem;font-weight:600;color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= INDICADOR_LABELS[m.indicador_codigo] || m.indicador_codigo %></p>
+            <div class="flex items-center gap-2" style="margin-top:.125rem">
+              <span style="display:inline-flex;align-items:center;gap:.2rem;padding:.125rem .5rem;border-radius:9999px;font-size:.625rem;font-weight:600;background:<%= sentido.bg %>;color:<%= sentido.color %>"><%= sentido.label %></span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-4" style="flex-shrink:0">
+          <div style="text-align:center;min-width:56px">
+            <div style="font-size:.625rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Meta</div>
+            <div style="font-size:1rem;font-weight:700;font-variant-numeric:tabular-nums;color:<%= m.meta_valor != null ? 'var(--color-text-primary)' : 'var(--color-surface-3)' %>"><%= m.meta_valor != null ? m.meta_valor : '—' %></div>
+          </div>
+          <div style="text-align:center;min-width:56px">
+            <div style="font-size:.625rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Alerta</div>
+            <div style="font-size:1rem;font-weight:700;font-variant-numeric:tabular-nums;color:<%= m.limite_alerta != null ? '#fbbf24' : 'var(--color-surface-3)' %>"><%= m.limite_alerta != null ? m.limite_alerta : '—' %></div>
+          </div>
+        </div>
+        <button class="btn-icon" title="Editar" hx-get="/metas/modal/editar?indicador_codigo=<%= m.indicador_codigo %>&ano=<%= ano %>" hx-target="#modal-container" hx-swap="innerHTML">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+        </button>
+      </div>
+      <!-- Seasonality bar -->
+      <div style="display:flex;align-items:center;gap:.125rem;margin-top:.5rem">
+        <% for (let month = 1; month <= 12; month++) { %>
+          <% const active = isMonthActive(month, m.mes_inicio, m.mes_fim) %>
+          <div style="flex:1;text-align:center" title="<%= MESES_CURTOS[month] %><%= active ? ' (ativo)' : ' (fora)' %>">
+            <div style="height:6px;border-radius:3px;background:<%= active ? icon.color : 'var(--color-surface-2)' %>;opacity:<%= active ? '.8' : '.25' %>;transition:all .2s"></div>
+            <span style="display:block;font-size:.5rem;color:<%= active ? 'var(--color-text-secondary)' : 'var(--color-surface-3)' %>;margin-top:2px;font-weight:<%= active ? '600' : '400' %>"><%= MESES_CURTOS[month] %></span>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  <% }) %>
+</div>
+<% } %>

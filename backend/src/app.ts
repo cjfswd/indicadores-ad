@@ -13,6 +13,7 @@ import { initializeDatabase } from './config/database.js'
 import { seedDatabase } from './config/seed.js'
 import { registrosRouter, pacientesRouter, metasRouter, semaforoRouter, auditoriaRouter, eventosRouter, relatorioRouter, authRouter } from './routes/index.js'
 import { dashboardViewRouter, registrosViewRouter, pacientesViewRouter, metasViewRouter, auditoriaViewRouter, authViewRouter } from './view-routes/index.js'
+import { registerViewHelpers } from './middleware/view-helpers.middleware.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -25,6 +26,7 @@ app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, 'views'))
 app.set('layout', 'layouts/main')
 app.use(ejsLayouts)
+registerViewHelpers(app)
 
 // ─── Static Files ───
 app.use(express.static(path.join(__dirname, '..', 'public')))

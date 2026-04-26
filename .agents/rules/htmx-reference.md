@@ -1,3 +1,9 @@
+---
+trigger: always_on
+glob:
+description:
+---
+
 # HTMX 2.x Reference (Antigravity Rules)
 
 High-density, token-optimized context for AI generation. Defines all core `hx-` attributes, HTTP headers, and DOM events for zero-JS declarative UI.

@@ -1,4 +1,4 @@
-<div class="modal-backdrop" onclick="if(event.target===this)closeModal()">
+<div class="modal-backdrop" hx-on:click="if(event.target===this)closeModal()">
   <div class="modal-content" style="max-width:24rem">
     <h3 style="margin-bottom:.5rem">Remover evento?</h3>
     <p style="font-size:.875rem;color:var(--color-text-muted);margin-bottom:1rem">O contador será decrementado e o evento será removido. Esta ação fica registrada na auditoria.</p>
@@ -12,7 +12,7 @@
         <input type="file" name="arquivo" class="form-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button type="button" class="btn btn-secondary" hx-on:click="closeModal()">Cancelar</button>
         <button type="submit" class="btn" style="background:#dc2626;color:white">Remover</button>
       </div>
     </form>

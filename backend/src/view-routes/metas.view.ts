@@ -32,7 +32,7 @@ metasViewRouter.get('/content', async (req, res) => {
   const db = getKysely()
   const ano = Number(req.query.metasAno || req.query.ano) || new Date().getFullYear()
   const metas = await db.selectFrom('metas').selectAll().where('ano', '=', ano).orderBy('indicador_codigo').execute()
-  res.render('components/metas-table', { layout: false, metas, ano })
+  res.render('partials/metas-table', { metas, ano, layout: false })
 })
 
 // GET /metas/modal/editar — meta form modal (pre-populated or empty)
@@ -45,7 +45,7 @@ metasViewRouter.get('/modal/editar', async (req, res) => {
     meta = await db.selectFrom('metas').selectAll()
       .where('indicador_codigo', '=', codigo).where('ano', '=', ano).executeTakeFirst()
   }
-  res.render('modals/meta-form', { layout: false, meta, ano })
+  res.render('modals/meta-form', { meta, ano, layout: false })
 })
 
 // PUT /metas — create or update (upsert by indicador_codigo + ano)
@@ -98,5 +98,5 @@ metasViewRouter.put('/', upload.single('arquivo'), async (req, res) => {
 
   const metas = await db.selectFrom('metas').selectAll().where('ano', '=', ano).orderBy('indicador_codigo').execute()
   triggerToast(res, 'Meta salva!')
-  res.render('components/metas-table', { layout: false, metas, ano })
+  res.render('partials/metas-table', { metas, ano, layout: false })
 })

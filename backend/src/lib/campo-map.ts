@@ -60,7 +60,7 @@ export async function incrementarMetrica(
     await db
       .updateTable('registros_mensais')
       .set({
-        [campo]: sql`MAX(0, ${sql.ref(campo)} - 1)`,
+        [campo]: sql`GREATEST(0, ${sql.ref(campo)} - 1)`,
         atualizado_em: now(),
       })
       .where('id', '=', registro.id)

@@ -71,11 +71,9 @@ async function loadRegistroData(db: ReturnType<typeof getKysely>, ano: number, m
   }
 
   return {
-    registro,
     registroId: registro?.id ?? null,
     statusReg: (registro?.status ?? 'rascunho') as 'rascunho' | 'confirmado',
     valores,
-    pacientes,
     eventos,
     ano,
     mes,
@@ -94,7 +92,7 @@ registrosViewRouter.get('/content', async (req, res) => {
   const ano = Number(req.query.regAno || req.query.ano) || hoje.getFullYear()
   const mes = Number(req.query.regMes || req.query.mes) || (hoje.getMonth() + 1)
   const data = await loadRegistroData(db, ano, mes)
-  res.render('components/registro-detail', { layout: false, ...data })
+  res.render('partials/registro-detail', { ...data, layout: false })
 })
 
 // GET /registros/modal/evento — event form modal
@@ -105,12 +103,12 @@ registrosViewRouter.get('/modal/evento', async (req, res) => {
   const ano = Number(req.query.ano)
   const mes = Number(req.query.mes)
   const pacientes = await db.selectFrom('pacientes').selectAll().where('status', '=', 'ativo').orderBy('nome').execute()
-  res.render('modals/evento-form', { layout: false, tipoEvento, label, ano, mes, pacientes })
+  res.render('modals/evento-form', { tipoEvento, label, ano, mes, pacientes, layout: false })
 })
 
 // GET /registros/modal/excluir-evento/:id — event delete confirm modal
 registrosViewRouter.get('/modal/excluir-evento/:id', (req, res) => {
-  res.render('modals/evento-excluir', { layout: false, id: req.params.id })
+  res.render('modals/evento-excluir', { id: req.params.id, layout: false })
 })
 
 // POST /registros/eventos — create event (HTMX, returns partial)
@@ -155,7 +153,7 @@ registrosViewRouter.post('/eventos', upload.single('arquivo'), async (req, res) 
 
   const data = await loadRegistroData(db, ano, mes)
   triggerToast(res, 'Evento registrado!')
-  res.render('components/registro-detail', { layout: false, ...data })
+  res.render('partials/registro-detail', { ...data, layout: false })
 })
 
 // POST /registros/eventos/:id/reverter — soft delete event (HTMX)
@@ -189,7 +187,7 @@ registrosViewRouter.post('/eventos/:id/reverter', upload.single('arquivo'), asyn
 
   const data = await loadRegistroData(db, evento.ano ?? new Date().getFullYear(), evento.mes ?? (new Date().getMonth() + 1))
   triggerToast(res, 'Evento removido')
-  res.render('components/registro-detail', { layout: false, ...data })
+  res.render('partials/registro-detail', { ...data, layout: false })
 })
 
 // PUT /registros/:id/confirmar — confirm record (HTMX)
@@ -212,5 +210,5 @@ registrosViewRouter.put('/:id/confirmar', async (req, res) => {
 
   const data = await loadRegistroData(db, antes.ano, antes.mes)
   triggerToast(res, 'Mês confirmado!')
-  res.render('components/registro-detail', { layout: false, ...data })
+  res.render('partials/registro-detail', { ...data, layout: false })
 })

@@ -1,16 +1,9 @@
-<%
-const MESES_CURTOS = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-const INDICADOR_LABELS = {
-  '01': 'Taxa de Altas (%)', '02': 'Intercorrências', '03': 'Taxa Internação (%)', '04': 'Óbitos',
-  '05': 'Alteração PAD (%)', '06': 'Censo AD/ID', '07': 'Infectados', '08': 'Eventos Adversos', '09': 'Reclamações',
-};
-const isEdit = typeof meta !== 'undefined' && meta;
-%>
-<div class="modal-backdrop" onclick="if(event.target===this)closeModal()">
+<% const isEdit = !!meta %>
+<div class="modal-backdrop" hx-on:click="if(event.target===this)closeModal()">
   <div class="modal-content">
     <div class="modal-header">
       <h3><%= isEdit ? 'Editar Meta' : 'Definir Meta' %></h3>
-      <button class="btn btn-ghost btn-icon" onclick="closeModal()">&times;</button>
+      <button class="btn btn-ghost btn-icon" hx-on:click="closeModal()">&times;</button>
     </div>
     <form hx-put="/metas" hx-target="#metas-content" hx-swap="innerHTML" hx-encoding="multipart/form-data">
       <input type="hidden" name="ano" value="<%= ano %>">
@@ -18,7 +11,7 @@ const isEdit = typeof meta !== 'undefined' && meta;
         <div class="form-group">
           <label class="form-label">Indicador</label>
           <select name="indicador_codigo" class="form-select" required>
-            <% Object.entries(INDICADOR_LABELS).forEach(function([codigo, nome]) { %>
+            <% Object.entries(INDICADOR_LABELS).forEach(([codigo, nome]) => { %>
               <option value="<%= codigo %>" <%= isEdit && meta.indicador_codigo === codigo ? 'selected' : '' %>><%= codigo %> — <%= nome %></option>
             <% }) %>
           </select>
@@ -26,13 +19,11 @@ const isEdit = typeof meta !== 'undefined' && meta;
         <div class="grid grid-2 gap-3">
           <div class="form-group">
             <label class="form-label">Meta</label>
-            <input type="number" name="meta_valor" class="form-input" step="0.01" placeholder="Valor da meta"
-                   value="<%= isEdit && meta.meta_valor != null ? meta.meta_valor : '' %>">
+            <input type="number" name="meta_valor" class="form-input" step="0.01" placeholder="Valor da meta" value="<%= isEdit && meta.meta_valor != null ? meta.meta_valor : '' %>">
           </div>
           <div class="form-group">
             <label class="form-label">Limite de Alerta</label>
-            <input type="number" name="limite_alerta" class="form-input" step="0.01" placeholder="Valor de alerta"
-                   value="<%= isEdit && meta.limite_alerta != null ? meta.limite_alerta : '' %>">
+            <input type="number" name="limite_alerta" class="form-input" step="0.01" placeholder="Valor de alerta" value="<%= isEdit && meta.limite_alerta != null ? meta.limite_alerta : '' %>">
           </div>
         </div>
         <div class="grid grid-3 gap-3">
@@ -47,13 +38,17 @@ const isEdit = typeof meta !== 'undefined' && meta;
           <div class="form-group">
             <label class="form-label">Mês início</label>
             <select name="mes_inicio" class="form-select">
-              <% for (let i = 1; i <= 12; i++) { %><option value="<%= i %>" <%= isEdit && meta.mes_inicio === i ? 'selected' : '' %>><%= MESES_CURTOS[i] %></option><% } %>
+              <% for (let i = 1; i <= 12; i++) { %>
+                <option value="<%= i %>" <%= isEdit ? (meta.mes_inicio === i ? 'selected' : '') : (i === 1 ? 'selected' : '') %>><%= MESES_CURTOS[i] %></option>
+              <% } %>
             </select>
           </div>
           <div class="form-group">
             <label class="form-label">Mês fim</label>
             <select name="mes_fim" class="form-select">
-              <% for (let i = 1; i <= 12; i++) { %><option value="<%= i %>" <%= isEdit && meta.mes_fim === i ? 'selected' : (i === 12 && !isEdit ? 'selected' : '') %>><%= MESES_CURTOS[i] %></option><% } %>
+              <% for (let i = 1; i <= 12; i++) { %>
+                <option value="<%= i %>" <%= isEdit ? (meta.mes_fim === i ? 'selected' : '') : (i === 12 ? 'selected' : '') %>><%= MESES_CURTOS[i] %></option>
+              <% } %>
             </select>
           </div>
         </div>
@@ -63,7 +58,7 @@ const isEdit = typeof meta !== 'undefined' && meta;
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button type="button" class="btn btn-secondary" hx-on:click="closeModal()">Cancelar</button>
         <button type="submit" class="btn btn-primary">Salvar</button>
       </div>
     </form>

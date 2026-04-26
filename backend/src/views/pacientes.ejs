@@ -33,19 +33,19 @@
       <button class="filter-tab active"
               hx-get="/pacientes/content?filtroStatus=ativo"
               hx-target="#pacientes-content" hx-include="[name='busca'],[name='filtroConvenio']"
-              onclick="document.querySelectorAll('#pac-status-filter .filter-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
+              hx-on::before-request="document.querySelectorAll('#pac-status-filter .filter-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
         Ativos
       </button>
       <button class="filter-tab"
               hx-get="/pacientes/content?filtroStatus=inativo"
               hx-target="#pacientes-content" hx-include="[name='busca'],[name='filtroConvenio']"
-              onclick="document.querySelectorAll('#pac-status-filter .filter-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
+              hx-on::before-request="document.querySelectorAll('#pac-status-filter .filter-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
         Inativos
       </button>
       <button class="filter-tab"
               hx-get="/pacientes/content?filtroStatus=todos"
               hx-target="#pacientes-content" hx-include="[name='busca'],[name='filtroConvenio']"
-              onclick="document.querySelectorAll('#pac-status-filter .filter-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
+              hx-on::before-request="document.querySelectorAll('#pac-status-filter .filter-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
         Todos
       </button>
       <input type="hidden" name="filtroStatus" value="ativo">

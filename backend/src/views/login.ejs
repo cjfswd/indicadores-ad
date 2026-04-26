@@ -14,26 +14,17 @@
         <h1>Indicadores AD</h1>
         <p>Health+ Cuidados — Atenção Domiciliar</p>
       </div>
-
       <% if (typeof error !== 'undefined' && error) { %>
-        <div style="background:rgba(239,68,68,.15);color:var(--color-semaforo-vermelho);padding:.75rem;border-radius:var(--radius-md);margin-bottom:1rem;font-size:.875rem">
-          <%= error %>
-        </div>
+        <div style="background:rgba(239,68,68,.15);color:var(--color-semaforo-vermelho);padding:.75rem;border-radius:var(--radius-md);margin-bottom:1rem;font-size:.875rem"><%= error %></div>
       <% } %>
-
       <form method="POST" action="/login">
         <div class="form-group mb-4">
           <label class="form-label">Email</label>
           <input type="email" name="email" class="form-input" placeholder="seu@email.com" required>
         </div>
-        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:.75rem">
-          Entrar
-        </button>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:.75rem">Entrar</button>
       </form>
-
-      <p style="margin-top:1.5rem;font-size:.75rem;color:var(--color-text-muted)">
-        Acesso restrito à equipe Health+ Cuidados
-      </p>
+      <p style="margin-top:1.5rem;font-size:.75rem;color:var(--color-text-muted)">Acesso restrito à equipe Health+ Cuidados</p>
     </div>
   </div>
 </body>

@@ -1,0 +1,175 @@
+<%
+const num = (v) => Number(v ?? 0)
+const r = registro
+const pacientesTotal = num(r?.pacientes_total)
+const pacientesAD = num(r?.pacientes_ad)
+const pacientesID = num(r?.pacientes_id)
+const eventosAdversos = num(r?.eventos_adversos_total)
+const taxaAltas = num(r?.taxa_altas_pct)
+%>
+<div class="page-header">
+  <div class="flex items-center gap-3">
+    <div style="width:2.5rem;height:2.5rem;border-radius:var(--radius-md);background:rgba(59,130,246,.15);color:#60a5fa;display:flex;align-items:center;justify-content:center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    </div>
+    <div><h2>Dashboard</h2><p>Visão consolidada dos indicadores assistenciais</p></div>
+  </div>
+</div>
+
+<div class="glass-card no-hover" style="padding:.75rem 1rem;position:relative;z-index:10">
+  <div class="flex items-center gap-3" style="flex-wrap:wrap">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span style="font-size:.75rem;font-weight:600;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.05em">Período</span>
+    <select class="form-select" style="width:auto" name="mes" hx-get="/dashboard/content" hx-target="#dashboard-content" hx-include="[name='ano']" hx-swap="innerHTML">
+      <% MESES.forEach((m, i) => { if (i === 0) return %><option value="<%= i %>" <%= i === mes ? 'selected' : '' %>><%= m %></option><% }) %>
+    </select>
+    <select class="form-select" style="width:auto" name="ano" hx-get="/dashboard/content" hx-target="#dashboard-content" hx-include="[name='mes']" hx-swap="innerHTML">
+      <% [2025, 2026, 2027].forEach(y => { %><option value="<%= y %>" <%= y === ano ? 'selected' : '' %>><%= y %></option><% }) %>
+    </select>
+    <div style="width:1px;height:1.25rem;background:var(--color-border);margin:0 .25rem"></div>
+    <a href="/api/v1/relatorio/excel/<%= ano %>/<%= mes %>" target="_blank" class="btn btn-sm" style="background:#059669;color:white">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Excel
+    </a>
+    <a href="/api/v1/relatorio/pdf/<%= ano %>/<%= mes %>" target="_blank" class="btn btn-primary btn-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      PDF
+    </a>
+  </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid grid-3 gap-4">
+  <div class="glass-card no-hover" style="padding:1.25rem">
+    <div class="flex items-center gap-3" style="margin-bottom:.75rem">
+      <div style="width:2.5rem;height:2.5rem;border-radius:var(--radius-md);background:rgba(59,130,246,.15);color:#60a5fa;display:flex;align-items:center;justify-content:center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      </div>
+      <div>
+        <p style="font-size:.75rem;color:var(--color-text-muted);font-weight:500">Pacientes Ativos</p>
+        <p style="font-size:1.5rem;font-weight:700;color:var(--color-text-primary);font-variant-numeric:tabular-nums"><%= pacientesTotal %></p>
+      </div>
+    </div>
+    <p style="font-size:.6875rem;color:var(--color-text-muted)"><%= pacientesAD %> AD · <%= pacientesID %> ID</p>
+  </div>
+  <div class="glass-card no-hover" style="padding:1.25rem">
+    <div class="flex items-center gap-3" style="margin-bottom:.75rem">
+      <div style="width:2.5rem;height:2.5rem;border-radius:var(--radius-md);background:rgba(239,68,68,.15);color:#f87171;display:flex;align-items:center;justify-content:center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div>
+        <p style="font-size:.75rem;color:var(--color-text-muted);font-weight:500">Eventos Adversos</p>
+        <p style="font-size:1.5rem;font-weight:700;color:var(--color-text-primary);font-variant-numeric:tabular-nums"><%= eventosAdversos %></p>
+      </div>
+    </div>
+    <p style="font-size:.6875rem;color:var(--color-text-muted)">Quedas, broncoasp., lesão pressão, decanulação, saída GTT</p>
+  </div>
+  <div class="glass-card no-hover" style="padding:1.25rem">
+    <div class="flex items-center gap-3" style="margin-bottom:.75rem">
+      <div style="width:2.5rem;height:2.5rem;border-radius:var(--radius-md);background:rgba(16,185,129,.15);color:#34d399;display:flex;align-items:center;justify-content:center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <div>
+        <p style="font-size:.75rem;color:var(--color-text-muted);font-weight:500">Taxa de Altas</p>
+        <p style="font-size:1.5rem;font-weight:700;color:var(--color-text-primary);font-variant-numeric:tabular-nums"><%= taxaAltas %>%</p>
+      </div>
+    </div>
+    <p style="font-size:.6875rem;color:var(--color-text-muted)">Percentual de altas domiciliares no período</p>
+  </div>
+</div>
+
+<!-- Semáforos -->
+<div>
+  <h3 style="font-size:.875rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:1rem">Indicadores — Semáforos</h3>
+  <div id="semaforo-grid"><%- semaforoHtml %></div>
+</div>
+
+<% if (registro) { %>
+<%
+  const eaData = [
+    { nome: 'Quedas', valor: num(r.ea_quedas), cor: '#fbbf24' },
+    { nome: 'Broncoasp.', valor: num(r.ea_broncoaspiracao), cor: '#f87171' },
+    { nome: 'Lesão Press.', valor: num(r.ea_lesao_pressao), cor: '#a78bfa' },
+    { nome: 'Decanulação', valor: num(r.ea_decanulacao), cor: '#60a5fa' },
+    { nome: 'Saída GTT', valor: num(r.ea_saida_gtt), cor: '#34d399' },
+  ]
+  const eaMax = Math.max(1, ...eaData.map(d => d.valor))
+
+  const donutSets = [
+    { titulo: 'Pacientes por Modalidade', items: [{nome:'AD',valor:pacientesAD,cor:'#60a5fa'},{nome:'ID',valor:pacientesID,cor:'#a78bfa'}], size: 120, inner: 80 },
+  ]
+  const miniCharts = [
+    { titulo: 'Ouvidorias', items: [{nome:'Elogios',valor:num(r.ouv_elogios),cor:'#34d399'},{nome:'Sugestões',valor:num(r.ouv_sugestoes),cor:'#fbbf24'},{nome:'Reclamações',valor:num(r.ouv_reclamacoes),cor:'#f87171'}] },
+    { titulo: 'Óbitos', items: [{nome:'<48h',valor:num(r.obitos_menos_48h),cor:'#fbbf24'},{nome:'≥48h',valor:num(r.obitos_mais_48h),cor:'#f87171'}] },
+    { titulo: 'Internação', items: [{nome:'Deterioração',valor:num(r.intern_deterioracao),cor:'#f87171'},{nome:'Não Aderência',valor:num(r.intern_nao_aderencia),cor:'#fbbf24'}] },
+  ]
+%>
+<div class="grid grid-2 gap-4">
+  <!-- Bar Chart: EA -->
+  <div class="glass-card no-hover" style="padding:1.25rem">
+    <h4 style="font-size:.875rem;font-weight:600;color:var(--color-text-primary);margin-bottom:1rem">Eventos Adversos por Tipo</h4>
+    <div class="space-y-2">
+      <% eaData.forEach(d => { %>
+        <div class="flex items-center gap-2">
+          <span style="width:80px;font-size:.75rem;color:var(--color-text-muted);text-align:right"><%= d.nome %></span>
+          <div style="flex:1;height:1.5rem;background:var(--overlay-soft);border-radius:var(--radius-sm);overflow:hidden">
+            <div style="height:100%;width:<%= d.valor / eaMax * 100 %>%;background:<%= d.cor %>;border-radius:var(--radius-sm);transition:width .6s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:.375rem">
+              <% if (d.valor > 0) { %><span style="font-size:.625rem;font-weight:700;color:white"><%= d.valor %></span><% } %>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+  <!-- Donut: Modalidade -->
+  <% donutSets.forEach(chart => { %>
+    <% const total = chart.items.reduce((s,i) => s + i.valor, 0) || 1 %>
+    <% let acc = 0 %>
+    <% const gradient = chart.items.map(item => { const pct = item.valor/total*100; const seg = item.cor+' '+acc+'% '+(acc+pct)+'%'; acc+=pct; return seg }).join(',') %>
+    <div class="glass-card no-hover" style="padding:1.25rem">
+      <h4 style="font-size:.875rem;font-weight:600;color:var(--color-text-primary);margin-bottom:1rem"><%= chart.titulo %></h4>
+      <div class="flex items-center" style="justify-content:center;gap:2rem">
+        <div style="width:<%= chart.size %>px;height:<%= chart.size %>px;border-radius:50%;background:conic-gradient(<%= gradient %>);display:flex;align-items:center;justify-content:center">
+          <div style="width:<%= chart.inner %>px;height:<%= chart.inner %>px;border-radius:50%;background:var(--color-surface-1);display:flex;align-items:center;justify-content:center;flex-direction:column">
+            <span style="font-size:1.125rem;font-weight:700;color:var(--color-text-primary)"><%= chart.items.reduce((s,i)=>s+i.valor,0) %></span>
+            <span style="font-size:.5625rem;color:var(--color-text-muted)">total</span>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <% chart.items.forEach(item => { %>
+            <div class="flex items-center gap-2">
+              <div style="width:12px;height:12px;border-radius:50%;background:<%= item.cor %>"></div>
+              <span style="font-size:.75rem;color:var(--color-text-secondary)"><%= item.nome %>: <strong><%= item.valor %></strong></span>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+</div>
+<!-- Mini donuts -->
+<div class="grid grid-3 gap-4">
+  <% miniCharts.forEach(chart => { %>
+    <% const total = chart.items.reduce((s,i)=>s+i.valor,0)||1; let acc2=0 %>
+    <% const grad = chart.items.map(item => { const pct=item.valor/total*100; const seg=item.cor+' '+acc2+'% '+(acc2+pct)+'%'; acc2+=pct; return seg }).join(',') %>
+    <div class="glass-card no-hover" style="padding:1.25rem">
+      <h4 style="font-size:.875rem;font-weight:600;color:var(--color-text-primary);margin-bottom:1rem"><%= chart.titulo %></h4>
+      <div class="flex items-center" style="justify-content:center;gap:1.5rem">
+        <div style="width:90px;height:90px;border-radius:50%;background:conic-gradient(<%= grad %>);display:flex;align-items:center;justify-content:center">
+          <div style="width:60px;height:60px;border-radius:50%;background:var(--color-surface-1);display:flex;align-items:center;justify-content:center">
+            <span style="font-size:.875rem;font-weight:700;color:var(--color-text-primary)"><%= chart.items.reduce((s,i)=>s+i.valor,0) %></span>
+          </div>
+        </div>
+        <div class="space-y-1">
+          <% chart.items.forEach(item => { %>
+            <div class="flex items-center gap-2">
+              <div style="width:8px;height:8px;border-radius:50%;background:<%= item.cor %>"></div>
+              <span style="font-size:.6875rem;color:var(--color-text-secondary)"><%= item.nome %>: <strong><%= item.valor %></strong></span>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+</div>
+<% } %>
