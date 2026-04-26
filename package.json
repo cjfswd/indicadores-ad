@@ -1,19 +1,40 @@
 {
   "name": "indicadores-ad",
-  "version": "3.0.0",
+  "version": "5.0.0",
   "private": true,
-  "description": "Sistema de Indicadores de Atenção Domiciliar (AD/ID)",
+  "type": "module",
+  "description": "Sistema de Indicadores de Atenção Domiciliar — Hono + HTMX + TSX",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
   },
   "scripts": {
-    "dev": "pnpm --filter backend dev",
-    "build": "pnpm -r build",
-    "start": "node backend/dist/backend/src/app.js",
-    "migrate": "pnpm --filter backend migrate",
-    "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test",
-    "test:coverage": "pnpm -r test:coverage"
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.4.4",
+    "@hono/node-server": "^1.13.0",
+    "@napi-rs/canvas": "^0.1.99",
+    "@types/pg": "^8.20.0",
+    "exceljs": "^4.4.0",
+    "hono": "^4.7.0",
+    "jsonwebtoken": "^9.0.2",
+    "kysely": "^0.28.16",
+    "kysely-pglite-dialect": "^1.3.1",
+    "pdfkit": "^0.18.0",
+    "pg": "^8.20.0",
+    "uuid": "^10.0.0",
+    "winston": "^3.15.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.0.0",
+    "@types/uuid": "^10.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0"
   }
 }

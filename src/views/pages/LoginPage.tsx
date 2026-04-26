@@ -1,0 +1,38 @@
+import type { FC } from 'hono/jsx'
+
+interface LoginPageProps {
+  error?: string | null
+}
+
+export const LoginPage: FC<LoginPageProps> = ({ error }) => (
+  <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Login — Indicadores AD</title>
+      <link rel="stylesheet" href="/css/styles.css" />
+    </head>
+    <body>
+      <div class="login-page">
+        <div class="glass-card login-card" style="padding:2.5rem">
+          <div style="margin-bottom:1.5rem">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 1rem;display:block"><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg>
+            <h1>Indicadores AD</h1>
+            <p>Health+ Cuidados — Atenção Domiciliar</p>
+          </div>
+          {error && (
+            <div style="background:rgba(239,68,68,.15);color:var(--color-semaforo-vermelho);padding:.75rem;border-radius:var(--radius-md);margin-bottom:1rem;font-size:.875rem">{error}</div>
+          )}
+          <form method="post" action="/login">
+            <div class="form-group mb-4">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-input" placeholder="seu@email.com" required />
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:.75rem">Entrar</button>
+          </form>
+          <p style="margin-top:1.5rem;font-size:.75rem;color:var(--color-text-muted)">Acesso restrito à equipe Health+ Cuidados</p>
+        </div>
+      </div>
+    </body>
+  </html>
+)

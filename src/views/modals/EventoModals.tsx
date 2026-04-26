@@ -1,0 +1,63 @@
+import type { FC } from 'hono/jsx'
+import { TIPO_EVENTO_LABELS } from '../helpers.js'
+
+interface Paciente { id: string; nome: string; convenio: string; modalidade: string }
+
+export const EventoForm: FC<{ tipoEvento: string; label: string; ano: number; mes: number; pacientes: Paciente[] }> = ({ tipoEvento, label, ano, mes, pacientes }) => (
+  <div class="modal-backdrop" hx-on:click="if(event.target===this)closeModal()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h3>Registrar Evento</h3>
+          <p style="font-size:.875rem;color:var(--color-accent);font-weight:500;margin-top:.25rem">{label}</p>
+        </div>
+        <button class="btn btn-ghost btn-icon" hx-on:click="closeModal()">×</button>
+      </div>
+      <form hx-post="/registros/eventos" hx-target="#registro-content" hx-swap="innerHTML">
+        <input type="hidden" name="tipo_evento" value={tipoEvento} />
+        <input type="hidden" name="ano" value={String(ano)} />
+        <input type="hidden" name="mes" value={String(mes)} />
+        <div class="space-y-4" style="margin-bottom:1rem">
+          <div class="form-group">
+            <label class="form-label">Paciente *</label>
+            <select name="paciente_id" class="form-select" required>
+              <option value="">Selecione...</option>
+              {pacientes.map(p => <option value={p.id}>{p.nome} ({p.convenio} · {p.modalidade})</option>)}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data do evento</label>
+            <input type="date" name="data_evento" class="form-input" value={new Date().toISOString().slice(0, 10)} />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descrição / Observação</label>
+            <textarea name="descricao" class="form-textarea" placeholder="Detalhes do evento..." rows={3}></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" hx-on:click="closeModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Registrar Evento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+)
+
+export const EventoExcluir: FC<{ id: string }> = ({ id }) => (
+  <div class="modal-backdrop" hx-on:click="if(event.target===this)closeModal()">
+    <div class="modal-content" style="max-width:24rem">
+      <h3 style="margin-bottom:.5rem">Remover evento?</h3>
+      <p style="font-size:.875rem;color:var(--color-text-muted);margin-bottom:1rem">O contador será decrementado e o evento será removido.</p>
+      <form hx-post={`/registros/eventos/${id}/reverter`} hx-target="#registro-content" hx-swap="innerHTML">
+        <div class="form-group" style="margin-bottom:1rem">
+          <label class="form-label">Justificativa *</label>
+          <textarea name="justificativa" class="form-textarea" placeholder="Motivo da remoção do evento..." rows={3} required></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" hx-on:click="closeModal()">Cancelar</button>
+          <button type="submit" class="btn" style="background:#dc2626;color:white">Remover</button>
+        </div>
+      </form>
+    </div>
+  </div>
+)
