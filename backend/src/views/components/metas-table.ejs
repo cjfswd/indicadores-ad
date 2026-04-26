@@ -1,14 +1,7 @@
 <%
 const INDICADOR_LABELS = {
-  '01': 'Taxa de Altas (%)',
-  '02': 'Intercorrências',
-  '03': 'Taxa Internação (%)',
-  '04': 'Óbitos',
-  '05': 'Alteração PAD (%)',
-  '06': 'Censo AD/ID',
-  '07': 'Infectados',
-  '08': 'Eventos Adversos',
-  '09': 'Reclamações',
+  '01': 'Taxa de Altas (%)', '02': 'Intercorrências', '03': 'Taxa Internação (%)', '04': 'Óbitos',
+  '05': 'Alteração PAD (%)', '06': 'Censo AD/ID', '07': 'Infectados', '08': 'Eventos Adversos', '09': 'Reclamações',
 };
 const MESES_CURTOS = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const SENTIDO_CONFIG = {
@@ -75,88 +68,12 @@ const INDICADOR_ICONS = {
         </div>
 
         <!-- Edit button -->
-        <button class="btn-icon" title="Editar" onclick='openMetaModal(<%- JSON.stringify({id:m.id,indicador_codigo:m.indicador_codigo,ano:m.ano,meta_valor:m.meta_valor,limite_alerta:m.limite_alerta,sentido:m.sentido,mes_inicio:m.mes_inicio,mes_fim:m.mes_fim}) %>)'>
+        <button class="btn-icon" title="Editar"
+                hx-get="/metas/modal/editar?indicador_codigo=<%= m.indicador_codigo %>&ano=<%= ano %>"
+                hx-target="#modal-container" hx-swap="innerHTML">
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
         </button>
       </div>
     <% }) %>
   </div>
 <% } %>
-
-<!-- Modal: Criar/Editar Meta -->
-<div class="modal-backdrop" id="modal-meta" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3 id="meta-modal-title">Definir Meta</h3>
-      <button class="btn btn-ghost btn-icon" onclick="this.closest('.modal-backdrop').style.display='none'">&times;</button>
-    </div>
-    <form id="form-meta" hx-put="/metas" hx-target="#metas-content" hx-swap="innerHTML"
-          hx-on::after-request="if(event.detail.successful){document.getElementById('modal-meta').style.display='none';showToast('Meta salva!')}">
-      <input type="hidden" name="ano" value="<%= ano %>">
-      <div class="space-y-4" style="margin-bottom:1rem">
-        <div class="form-group">
-          <label class="form-label">Indicador</label>
-          <select name="indicador_codigo" id="meta-indicador" class="form-select" required>
-            <% Object.entries(INDICADOR_LABELS).forEach(function([codigo, nome]) { %>
-              <option value="<%= codigo %>"><%= codigo %> — <%= nome %></option>
-            <% }) %>
-          </select>
-        </div>
-        <div class="grid grid-2 gap-3">
-          <div class="form-group">
-            <label class="form-label">Meta</label>
-            <input type="number" name="meta_valor" id="meta-valor" class="form-input" step="0.01" placeholder="Valor da meta">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Limite de Alerta</label>
-            <input type="number" name="limite_alerta" id="meta-alerta" class="form-input" step="0.01" placeholder="Valor de alerta">
-          </div>
-        </div>
-        <div class="grid grid-3 gap-3">
-          <div class="form-group">
-            <label class="form-label">Sentido</label>
-            <select name="sentido" id="meta-sentido" class="form-select">
-              <option value="menor">↓ Menor melhor</option>
-              <option value="maior">↑ Maior melhor</option>
-              <option value="neutro">→ Neutro</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Mês início</label>
-            <select name="mes_inicio" id="meta-inicio" class="form-select">
-              <% for (let i = 1; i <= 12; i++) { %><option value="<%= i %>"><%= MESES_CURTOS[i] %></option><% } %>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Mês fim</label>
-            <select name="mes_fim" id="meta-fim" class="form-select">
-              <% for (let i = 1; i <= 12; i++) { %><option value="<%= i %>" <%= i === 12 ? 'selected' : '' %>><%= MESES_CURTOS[i] %></option><% } %>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').style.display='none'">Cancelar</button>
-        <button type="submit" class="btn btn-primary">Salvar</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<script>
-function openMetaModal(m) {
-  if (m) {
-    document.getElementById('meta-modal-title').textContent = 'Editar Meta';
-    document.getElementById('meta-indicador').value = m.indicador_codigo;
-    document.getElementById('meta-valor').value = m.meta_valor ?? '';
-    document.getElementById('meta-alerta').value = m.limite_alerta ?? '';
-    document.getElementById('meta-sentido').value = m.sentido || 'menor';
-    document.getElementById('meta-inicio').value = m.mes_inicio || 1;
-    document.getElementById('meta-fim').value = m.mes_fim || 12;
-  } else {
-    document.getElementById('meta-modal-title').textContent = 'Definir Meta';
-    document.getElementById('form-meta').reset();
-  }
-  document.getElementById('modal-meta').style.display = 'flex';
-}
-</script>

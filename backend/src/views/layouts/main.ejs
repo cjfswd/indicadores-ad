@@ -16,6 +16,7 @@
       <%- body %>
     </main>
   </div>
+  <div id="modal-container"></div>
 
   <script>
     // ─── Toast helper ───
@@ -39,6 +40,15 @@
     // ─── HTMX error handler ───
     document.body.addEventListener('htmx:responseError', function(e) {
       showToast('Erro ao processar requisição', 'error');
+    });
+
+    // ─── Close modal ───
+    function closeModal() { document.getElementById('modal-container').innerHTML = ''; }
+
+    // ─── Auto-close modal on HX-Trigger ───
+    document.body.addEventListener('showToast', function(e) {
+      closeModal();
+      if (e.detail && e.detail.message) showToast(e.detail.message, e.detail.type || 'success');
     });
 
     // ─── Mobile sidebar toggle ───

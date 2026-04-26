@@ -6,12 +6,29 @@ import { now } from '../lib/sql-helpers.js'
 
 export const metasViewRouter = Router()
 
+function triggerToast(res: import('express').Response, message: string) {
+  res.setHeader('HX-Trigger', JSON.stringify({ showToast: { message } }))
+}
+
 // GET /metas — full page
 metasViewRouter.get('/', async (req, res) => {
   const db = getKysely()
   const ano = Number(req.query.ano) || new Date().getFullYear()
   const metas = await db.selectFrom('metas').selectAll().where('ano', '=', ano).orderBy('indicador_codigo').execute()
   res.render('metas', { title: 'Metas', currentPath: '/metas', ano, metas })
+})
+
+// GET /metas/modal/editar — meta form modal (pre-populated or empty)
+metasViewRouter.get('/modal/editar', async (req, res) => {
+  const db = getKysely()
+  const ano = Number(req.query.ano) || new Date().getFullYear()
+  const codigo = req.query.indicador_codigo as string | undefined
+  let meta = null
+  if (codigo) {
+    meta = await db.selectFrom('metas').selectAll()
+      .where('indicador_codigo', '=', codigo).where('ano', '=', ano).executeTakeFirst()
+  }
+  res.render('modals/meta-form', { layout: false, meta, ano })
 })
 
 // PUT /metas — create or update (upsert by indicador_codigo + ano)
@@ -60,5 +77,6 @@ metasViewRouter.put('/', async (req, res) => {
   }
 
   const metas = await db.selectFrom('metas').selectAll().where('ano', '=', ano).orderBy('indicador_codigo').execute()
+  triggerToast(res, 'Meta salva!')
   res.render('components/metas-table', { layout: false, metas, ano })
 })

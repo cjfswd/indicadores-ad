@@ -63,7 +63,8 @@ function fmtDate(d) { if (!d) return ''; const parts = d.split('-'); return part
               </div>
               <% if (!isLocked) { %>
                 <button class="btn btn-sm" style="background:rgba(16,185,129,.1);color:#34d399;border:1px solid rgba(16,185,129,.2);font-size:.75rem"
-                        onclick="openEventModal('<%= campo.tipoEvento %>', '<%= campo.label %>')">
+                        hx-get="/registros/modal/evento?tipo=<%= campo.tipoEvento %>&label=<%= encodeURIComponent(campo.label) %>&ano=<%= ano %>&mes=<%= mes %>"
+                        hx-target="#modal-container" hx-swap="innerHTML">
                   + <span class="hide-mobile">Registrar</span>
                 </button>
               <% } %>
@@ -91,7 +92,9 @@ function fmtDate(d) { if (!d) return ''; const parts = d.split('-'); return part
                       </div>
                     </div>
                     <% if (!isLocked) { %>
-                      <button class="btn-icon-danger" onclick="openDeleteEventModal('<%= ev.id %>')" title="Remover evento">
+                      <button class="btn-icon-danger" title="Remover evento"
+                              hx-get="/registros/modal/excluir-evento/<%= ev.id %>"
+                              hx-target="#modal-container" hx-swap="innerHTML">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                       </button>
                     <% } %>
@@ -109,86 +112,3 @@ function fmtDate(d) { if (!d) return ''; const parts = d.split('-'); return part
     </div>
   <% }) %>
 </div>
-
-<!-- Modal: Registrar Evento -->
-<div class="modal-backdrop" id="modal-evento" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div>
-        <h3>Registrar Evento</h3>
-        <p id="modal-evento-label" style="font-size:.875rem;color:var(--color-accent);font-weight:500;margin-top:.25rem"></p>
-      </div>
-      <button class="btn btn-ghost btn-icon" onclick="this.closest('.modal-backdrop').style.display='none'">&times;</button>
-    </div>
-    <form id="form-evento" hx-post="/registros/eventos" hx-target="#registro-content" hx-swap="innerHTML" hx-encoding="multipart/form-data"
-          hx-on::after-request="if(event.detail.successful){document.getElementById('modal-evento').style.display='none';showToast('Evento registrado!')}">
-      <input type="hidden" name="tipo_evento" id="evento-tipo">
-      <input type="hidden" name="ano" value="<%= ano %>">
-      <input type="hidden" name="mes" value="<%= mes %>">
-      <div class="space-y-4" style="margin-bottom:1rem">
-        <div class="form-group">
-          <label class="form-label">Paciente *</label>
-          <select name="paciente_id" class="form-select" required>
-            <option value="">Selecione...</option>
-            <% pacientes.forEach(function(p) { %>
-              <option value="<%= p.id %>"><%= p.nome %> (<%= p.convenio %> · <%= p.modalidade %>)</option>
-            <% }) %>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Data do evento</label>
-          <input type="date" name="data_evento" class="form-input" value="<%= new Date().toISOString().slice(0,10) %>">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Descrição / Observação</label>
-          <textarea name="descricao" class="form-textarea" placeholder="Detalhes do evento..." rows="3"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Anexo (opcional)</label>
-          <input type="file" name="arquivo" class="form-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').style.display='none'">Cancelar</button>
-        <button type="submit" class="btn btn-primary">Registrar Evento</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Modal: Confirmar remoção de evento -->
-<div class="modal-backdrop" id="modal-delete-evento" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-  <div class="modal-content" style="max-width:24rem">
-    <h3 style="margin-bottom:.5rem">Remover evento?</h3>
-    <p style="font-size:.875rem;color:var(--color-text-muted);margin-bottom:1rem">O contador será decrementado e o evento será removido. Esta ação fica registrada na auditoria.</p>
-    <form id="form-delete-evento" hx-target="#registro-content" hx-swap="innerHTML" hx-encoding="multipart/form-data"
-          hx-on::after-request="if(event.detail.successful){document.getElementById('modal-delete-evento').style.display='none';showToast('Evento removido')}">
-      <div class="form-group" style="margin-bottom:1rem">
-        <label class="form-label">Justificativa *</label>
-        <textarea name="justificativa" class="form-textarea" placeholder="Motivo da remoção do evento..." rows="3" required></textarea>
-      </div>
-      <div class="form-group" style="margin-bottom:1rem">
-        <label class="form-label">Anexo (opcional)</label>
-        <input type="file" name="arquivo" class="form-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').style.display='none'">Cancelar</button>
-        <button type="submit" class="btn" style="background:#dc2626;color:white">Remover</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<script>
-function openEventModal(tipo, label) {
-  document.getElementById('evento-tipo').value = tipo;
-  document.getElementById('modal-evento-label').textContent = label;
-  document.getElementById('modal-evento').style.display = 'flex';
-}
-function openDeleteEventModal(id) {
-  const form = document.getElementById('form-delete-evento');
-  form.setAttribute('hx-post', '/registros/eventos/' + id + '/reverter');
-  htmx.process(form);
-  document.getElementById('modal-delete-evento').style.display = 'flex';
-}
-</script>

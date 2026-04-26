@@ -1,0 +1,42 @@
+<%
+const INDICADORES_DESATIVACAO = [
+  { codigo: '01', nome: 'Alta Domiciliar' },
+  { codigo: '03', nome: 'Internação Hospitalar' },
+  { codigo: '04', nome: 'Óbito' },
+];
+%>
+<div class="modal-backdrop" onclick="if(event.target===this)closeModal()">
+  <div class="modal-content" style="max-width:28rem">
+    <div class="flex items-center gap-3" style="margin-bottom:1rem">
+      <div style="width:2.5rem;height:2.5rem;border-radius:50%;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
+      </div>
+      <div>
+        <h3>Desativar paciente</h3>
+        <p style="font-size:.75rem;color:var(--color-text-muted)"><%= nome %></p>
+      </div>
+    </div>
+    <p style="font-size:.875rem;color:var(--color-text-muted);margin-bottom:1rem">Desativar é diferente de excluir — o paciente permanece no sistema com histórico preservado, mas ficará inativo.</p>
+    <form hx-put="/pacientes/<%= id %>/desativar" hx-target="#pacientes-content" hx-swap="innerHTML">
+      <div class="space-y-4" style="margin-bottom:1rem">
+        <div class="form-group">
+          <label class="form-label">Justificativa <span style="color:#ef4444">*</span></label>
+          <textarea name="justificativa" class="form-textarea" placeholder="Motivo da desativação..." rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Indicador vinculado <span style="color:var(--color-text-muted);opacity:.6">(opcional)</span></label>
+          <select name="indicador" class="form-select">
+            <option value="">Nenhum</option>
+            <% INDICADORES_DESATIVACAO.forEach(function(ind) { %>
+              <option value="<%= ind.codigo %>"><%= ind.codigo %> — <%= ind.nome %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn" style="background:#d97706;color:white">Desativar</button>
+      </div>
+    </form>
+  </div>
+</div>

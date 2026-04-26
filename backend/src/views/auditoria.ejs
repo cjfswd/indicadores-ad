@@ -39,7 +39,8 @@
     </div>
     <% if (filtroEntidade || filtroAcao) { %>
       <button class="btn btn-sm btn-ghost" style="align-self:flex-end"
-              onclick="document.querySelector('[name=filtroEntidade]').value='';document.querySelector('[name=filtroAcao]').value='';htmx.trigger(document.querySelector('[name=filtroEntidade]'),'change')">
+              hx-get="/auditoria/content" hx-target="#auditoria-content"
+              hx-vals='{"filtroEntidade":"","filtroAcao":""}'>
         ✕ Limpar filtros
       </button>
     <% } %>
@@ -49,31 +50,3 @@
 <div id="auditoria-content">
   <%- include('./components/auditoria-table', { logs, total, pagina, totalPaginas }) %>
 </div>
-
-<!-- Modal: Confirmar reversão -->
-<div class="modal-backdrop" id="modal-revert" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-  <div class="modal-content" style="max-width:24rem">
-    <h3 id="revert-title" style="margin-bottom:.75rem">Reverter ação?</h3>
-    <form id="form-revert" hx-target="#auditoria-content" hx-swap="innerHTML"
-          hx-on::after-request="if(event.detail.successful){document.getElementById('modal-revert').style.display='none';showToast('Ação revertida')}">
-      <div class="form-group" style="margin-bottom:1rem">
-        <label class="form-label">Justificativa *</label>
-        <textarea name="justificativa" class="form-textarea" placeholder="Motivo da reversão..." rows="3" required></textarea>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').style.display='none'">Cancelar</button>
-        <button type="submit" class="btn" style="background:#d97706;color:white">↺ Reverter</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<script>
-function openRevertModal(id, acao, entidade) {
-  document.getElementById('revert-title').textContent = 'Reverter ' + acao + ' de ' + entidade + '?';
-  const form = document.getElementById('form-revert');
-  form.setAttribute('hx-post', '/auditoria/' + id + '/reverter');
-  htmx.process(form);
-  document.getElementById('modal-revert').style.display = 'flex';
-}
-</script>

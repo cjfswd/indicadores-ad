@@ -1,0 +1,47 @@
+<div class="modal-backdrop" onclick="if(event.target===this)closeModal()">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><%= typeof paciente !== 'undefined' && paciente ? 'Editar Paciente' : 'Novo Paciente' %></h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal()">&times;</button>
+    </div>
+    <form <% if (typeof paciente !== 'undefined' && paciente) { %>hx-put="/pacientes/<%= paciente.id %>"<% } else { %>hx-post="/pacientes"<% } %>
+          hx-target="#pacientes-content" hx-swap="innerHTML">
+      <div class="space-y-4" style="margin-bottom:1rem">
+        <div class="form-group">
+          <label class="form-label">Nome completo <span style="color:#ef4444">*</span></label>
+          <input type="text" name="nome" class="form-input" required minlength="3" maxlength="200"
+                 placeholder="Nome do paciente" value="<%= typeof paciente !== 'undefined' && paciente ? paciente.nome : '' %>">
+        </div>
+        <div class="grid grid-2 gap-3">
+          <div class="form-group">
+            <label class="form-label">Convênio <span style="color:#ef4444">*</span></label>
+            <select name="convenio" class="form-select" required>
+              <option value="Camperj" <%= typeof paciente !== 'undefined' && paciente && paciente.convenio === 'Camperj' ? 'selected' : '' %>>Camperj</option>
+              <option value="Unimed" <%= typeof paciente !== 'undefined' && paciente && paciente.convenio === 'Unimed' ? 'selected' : '' %>>Unimed</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Modalidade <span style="color:#ef4444">*</span></label>
+            <select name="modalidade" class="form-select" required>
+              <option value="AD" <%= typeof paciente !== 'undefined' && paciente && paciente.modalidade === 'AD' ? 'selected' : '' %>>AD</option>
+              <option value="ID" <%= typeof paciente !== 'undefined' && paciente && paciente.modalidade === 'ID' ? 'selected' : '' %>>ID</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data de nascimento <span style="color:var(--color-text-muted);opacity:.6">(opcional)</span></label>
+          <input type="date" name="data_nascimento" class="form-input"
+                 value="<%= typeof paciente !== 'undefined' && paciente && paciente.data_nascimento ? paciente.data_nascimento : '' %>">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Observações <span style="color:var(--color-text-muted);opacity:.6">(opcional)</span></label>
+          <textarea name="observacoes" class="form-textarea" placeholder="Informações complementares..." rows="3"><%= typeof paciente !== 'undefined' && paciente && paciente.observacoes ? paciente.observacoes : '' %></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary"><%= typeof paciente !== 'undefined' && paciente ? 'Salvar Alterações' : 'Cadastrar' %></button>
+      </div>
+    </form>
+  </div>
+</div>

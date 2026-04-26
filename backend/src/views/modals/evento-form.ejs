@@ -1,0 +1,43 @@
+<div class="modal-backdrop" onclick="if(event.target===this)closeModal()">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div>
+        <h3>Registrar Evento</h3>
+        <p style="font-size:.875rem;color:var(--color-accent);font-weight:500;margin-top:.25rem"><%= label %></p>
+      </div>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal()">&times;</button>
+    </div>
+    <form hx-post="/registros/eventos" hx-target="#registro-content" hx-swap="innerHTML" hx-encoding="multipart/form-data">
+      <input type="hidden" name="tipo_evento" value="<%= tipoEvento %>">
+      <input type="hidden" name="ano" value="<%= ano %>">
+      <input type="hidden" name="mes" value="<%= mes %>">
+      <div class="space-y-4" style="margin-bottom:1rem">
+        <div class="form-group">
+          <label class="form-label">Paciente *</label>
+          <select name="paciente_id" class="form-select" required>
+            <option value="">Selecione...</option>
+            <% pacientes.forEach(function(p) { %>
+              <option value="<%= p.id %>"><%= p.nome %> (<%= p.convenio %> · <%= p.modalidade %>)</option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data do evento</label>
+          <input type="date" name="data_evento" class="form-input" value="<%= new Date().toISOString().slice(0,10) %>">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descrição / Observação</label>
+          <textarea name="descricao" class="form-textarea" placeholder="Detalhes do evento..." rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Anexo (opcional)</label>
+          <input type="file" name="arquivo" class="form-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Registrar Evento</button>
+      </div>
+    </form>
+  </div>
+</div>

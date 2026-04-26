@@ -6,6 +6,10 @@ import { now } from '../lib/sql-helpers.js'
 
 export const pacientesViewRouter = Router()
 
+function triggerToast(res: import('express').Response, message: string) {
+  res.setHeader('HX-Trigger', JSON.stringify({ showToast: { message } }))
+}
+
 const INDICADORES_DESATIVACAO = [
   { codigo: '01', nome: 'Alta Domiciliar' },
   { codigo: '03', nome: 'Internação Hospitalar' },
@@ -63,7 +67,32 @@ pacientesViewRouter.get('/content', async (req, res) => {
   res.render('components/pacientes-grouped', { layout: false, ...data })
 })
 
-// POST /pacientes — create
+// GET /pacientes/modal/novo — empty form modal
+pacientesViewRouter.get('/modal/novo', (_req, res) => {
+  res.render('modals/paciente-form', { layout: false })
+})
+
+// GET /pacientes/:id/modal/editar — pre-populated form modal
+pacientesViewRouter.get('/:id/modal/editar', async (req, res) => {
+  const db = getKysely()
+  const paciente = await db.selectFrom('pacientes').selectAll().where('id', '=', req.params.id).executeTakeFirst()
+  if (!paciente) { res.status(404).send('Não encontrado'); return }
+  res.render('modals/paciente-form', { layout: false, paciente })
+})
+
+// GET /pacientes/:id/modal/desativar
+pacientesViewRouter.get('/:id/modal/desativar', async (req, res) => {
+  const db = getKysely()
+  const paciente = await db.selectFrom('pacientes').select(['id', 'nome']).where('id', '=', req.params.id).executeTakeFirst()
+  if (!paciente) { res.status(404).send('Não encontrado'); return }
+  res.render('modals/paciente-desativar', { layout: false, id: paciente.id, nome: paciente.nome })
+})
+
+// GET /pacientes/:id/modal/excluir
+pacientesViewRouter.get('/:id/modal/excluir', (_req, res) => {
+  res.render('modals/paciente-excluir', { layout: false, id: _req.params.id })
+})
+
 pacientesViewRouter.post('/', async (req, res) => {
   const db = getKysely()
   const { nome, convenio, modalidade, data_nascimento, observacoes } = req.body
@@ -80,6 +109,7 @@ pacientesViewRouter.post('/', async (req, res) => {
   }).execute()
 
   const data = await loadPacienteData(db, 'ativo')
+  triggerToast(res, 'Paciente cadastrado!')
   res.render('components/pacientes-grouped', { layout: false, ...data })
 })
 
@@ -106,6 +136,7 @@ pacientesViewRouter.put('/:id', async (req, res) => {
   }).execute()
 
   const data = await loadPacienteData(db, 'ativo')
+  triggerToast(res, 'Paciente atualizado!')
   res.render('components/pacientes-grouped', { layout: false, ...data })
 })
 
@@ -133,6 +164,7 @@ pacientesViewRouter.put('/:id/desativar', async (req, res) => {
   }).execute()
 
   const data = await loadPacienteData(db, 'ativo')
+  triggerToast(res, 'Paciente desativado')
   res.render('components/pacientes-grouped', { layout: false, ...data })
 })
 
@@ -155,6 +187,7 @@ pacientesViewRouter.put('/:id/reativar', async (req, res) => {
   }).execute()
 
   const data = await loadPacienteData(db, 'ativo')
+  triggerToast(res, 'Paciente reativado!')
   res.render('components/pacientes-grouped', { layout: false, ...data })
 })
 
@@ -179,5 +212,6 @@ pacientesViewRouter.post('/:id/excluir', async (req, res) => {
   }).execute()
 
   const data = await loadPacienteData(db, 'ativo')
+  triggerToast(res, 'Paciente excluído')
   res.render('components/pacientes-grouped', { layout: false, ...data })
 })
