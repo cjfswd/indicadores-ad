@@ -9,5 +9,6 @@ coverage/
 .DS_Store
 Thumbs.db
 .VSCodeCounter/
+.react-router/
 uploads/
 *.tsbuildinfo

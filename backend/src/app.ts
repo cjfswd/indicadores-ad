@@ -34,10 +34,7 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
 }))
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? true : (process.env.FRONTEND_URL ?? 'http://localhost:5173'),
-  credentials: true,
-}))
+app.use(cors({ origin: true, credentials: true }))
 
 // ─── Parsing ───
 app.use(express.json({ limit: '1mb' }))
