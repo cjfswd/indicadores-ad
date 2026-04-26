@@ -1,50 +1,134 @@
-<% if (!logs || logs.length === 0) { %>
-  <div class="empty-state">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-    <p>Nenhum registro de auditoria encontrado.</p>
+<%
+const ACAO_COLORS = {
+  criar: { bg: 'rgba(16,185,129,.15)', text: '#34d399' },
+  editar: { bg: 'rgba(245,158,11,.15)', text: '#fbbf24' },
+  confirmar: { bg: 'rgba(59,130,246,.15)', text: '#60a5fa' },
+  excluir: { bg: 'rgba(239,68,68,.15)', text: '#f87171' },
+  desativar: { bg: 'rgba(245,158,11,.15)', text: '#fbbf24' },
+  reativar: { bg: 'rgba(20,184,166,.15)', text: '#2dd4bf' },
+  reverter_criacao: { bg: 'rgba(249,115,22,.15)', text: '#fb923c' },
+  reverter_exclusao: { bg: 'rgba(6,182,212,.15)', text: '#22d3ee' },
+  reverter_edicao: { bg: 'rgba(139,92,246,.15)', text: '#a78bfa' },
+  reverter_confirmacao: { bg: 'rgba(56,189,248,.15)', text: '#38bdf8' },
+  reverter_desativacao: { bg: 'rgba(20,184,166,.15)', text: '#2dd4bf' },
+  reverter_reativacao: { bg: 'rgba(245,158,11,.15)', text: '#fbbf24' },
+};
+const ENTIDADE_LABELS = { evento_paciente: 'Evento Clínico', registro_mensal: 'Registro Mensal', paciente: 'Paciente', meta: 'Meta' };
+const INDICADOR_LABELS = { '01': 'Taxa de Altas (%)', '02': 'Intercorrências', '03': 'Taxa Internação (%)', '04': 'Óbitos', '05': 'Alteração PAD (%)', '06': 'Censo AD/ID', '07': 'Infectados', '08': 'Eventos Adversos', '09': 'Reclamações' };
+const TIPO_EVENTO_LABELS = { alta: 'Alta', intercorrencia: 'Intercorrência', intern_deterioracao: 'Internação (deterioração)', intern_nao_aderencia: 'Internação (não aderência)', obito: 'Óbito', obito_menos_48h: 'Óbito <48h', obito_mais_48h: 'Óbito ≥48h', infectado: 'Infecção', ea_queda: 'EA: Queda', ea_broncoaspiracao: 'EA: Broncoaspiração', ea_lesao_pressao: 'EA: Lesão Pressão', ea_decanulacao: 'EA: Decanulação', ea_saida_gtt: 'EA: Saída GTT', evento_adverso: 'Evento Adverso', ouvidoria_elogio: 'Ouvidoria: Elogio', ouvidoria_sugestao: 'Ouvidoria: Sugestão', ouvidoria_reclamacao: 'Ouvidoria: Reclamação' };
+
+function fmtTs(ts) { if (!ts) return ''; try { const d = new Date(ts.replace(' ','T')); return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) } catch { return ts } }
+
+function getDescription(entry) {
+  let payload = null; try { if (entry.payload) payload = JSON.parse(entry.payload) } catch {}
+  const tipo = entry.campo_alterado ? (TIPO_EVENTO_LABELS[entry.campo_alterado] ?? entry.campo_alterado) : null;
+  const nome = (() => { try { return payload?.antes?.nome ?? payload?.depois?.nome ?? payload?.nome ?? entry.valor_anterior ?? entry.valor_novo } catch { return entry.valor_novo } })();
+  const indicador = INDICADOR_LABELS[entry.entidade_id] ?? entry.entidade_id;
+
+  if (entry.entidade === 'evento_paciente') {
+    if (entry.acao === 'criar') return 'Registrou ' + (tipo || 'evento') + ' — paciente ' + (entry.valor_novo || '');
+    if (entry.acao === 'excluir') return 'Reverteu ' + (tipo || 'evento') + ' — paciente ' + (entry.valor_novo || '');
+  }
+  if (entry.entidade === 'registro_mensal') {
+    const meses = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    let periodo = ''; try { const a = payload?.antes?.ano ?? payload?.depois?.ano; const m = payload?.antes?.mes ?? payload?.depois?.mes; if (a && m) periodo = ' (' + meses[Number(m)] + '/' + a + ')'; } catch {}
+    if (entry.acao === 'confirmar') return 'Confirmou registro mensal' + periodo;
+    if (entry.acao === 'reverter_confirmacao') return 'Reverteu confirmação de registro mensal' + periodo;
+    if (entry.acao === 'criar') return 'Criou registro mensal' + periodo;
+  }
+  if (entry.entidade === 'paciente') {
+    if (entry.acao === 'criar') return 'Cadastrou paciente ' + (nome || '');
+    if (entry.acao === 'editar') return 'Editou paciente ' + (nome || '');
+    if (entry.acao === 'desativar') return 'Desativou paciente ' + (nome || '');
+    if (entry.acao === 'reativar') return 'Reativou paciente ' + (nome || '');
+    if (entry.acao === 'excluir') return 'Excluiu paciente ' + (nome || '');
+    if (entry.acao.startsWith('reverter')) return 'Reverteu ' + entry.acao.split('_').slice(1).join(' ') + ' de paciente ' + (nome || '');
+  }
+  if (entry.entidade === 'meta') {
+    if (entry.acao === 'criar') return 'Definiu meta de ' + indicador;
+    if (entry.acao === 'editar') return 'Alterou meta de ' + indicador;
+  }
+  return entry.acao + ' ' + (ENTIDADE_LABELS[entry.entidade] || entry.entidade);
+}
+
+function canRevert(e) { return !e.revertido && ['criar','editar','confirmar','desativar','reativar','excluir'].includes(e.acao) }
+%>
+
+<% if (logs.length === 0) { %>
+  <div style="text-align:center;padding:4rem 0;color:var(--color-text-muted)">
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto .75rem;opacity:.3"><path d="M3 3v5h5"/><path d="M3 8a9 9 0 0 1 18 0 9 9 0 0 1-18 0"/></svg>
+    <p style="font-size:.875rem">Nenhum registro de auditoria encontrado</p>
   </div>
 <% } else { %>
-  <div class="glass-card no-hover" style="overflow-x:auto">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Data/Hora</th>
-          <th>Ação</th>
-          <th>Entidade</th>
-          <th>Usuário</th>
-          <th>Campo</th>
-          <th>Valor Anterior</th>
-          <th>Valor Novo</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% logs.forEach(function(log) { %>
-          <tr>
-            <td class="text-xs font-mono"><%= new Date(log.timestamp).toLocaleString('pt-BR') %></td>
-            <td>
-              <% const acaoMap = { criar:'badge-verde', editar:'badge-neutro', confirmar:'badge-verde', excluir:'badge-vermelho', desativar:'badge-amarelo', reativar:'badge-verde' }; %>
-              <span class="badge <%= acaoMap[log.acao] || 'badge-muted' %>"><%= log.acao %></span>
-            </td>
-            <td><%= log.entidade %></td>
-            <td class="text-xs"><%= log.usuario_email || '—' %></td>
-            <td class="text-xs"><%= log.campo_alterado || '—' %></td>
-            <td class="text-xs" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= log.valor_anterior || '—' %></td>
-            <td class="text-xs" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= log.valor_novo || '—' %></td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
+  <div class="space-y-3">
+    <% logs.forEach(function(entry, i) { %>
+      <% const acaoColor = ACAO_COLORS[entry.acao] || { bg: 'rgba(107,114,128,.15)', text: '#9ca3af' }; %>
+      <div class="glass-card no-hover" style="padding:1rem;animation:fadeIn .3s ease <%= i * 40 %>ms both">
+        <div class="flex items-center gap-2" style="margin-bottom:.5rem;flex-wrap:wrap">
+          <span style="display:inline-block;padding:.125rem .5rem;border-radius:9999px;font-size:.6875rem;font-weight:600;text-transform:uppercase;background:<%= acaoColor.bg %>;color:<%= acaoColor.text %>">
+            <%= entry.acao %>
+          </span>
+          <span class="badge badge-muted"><%= ENTIDADE_LABELS[entry.entidade] || entry.entidade %></span>
+          <% if (entry.revertido) { %>
+            <span style="font-size:.625rem;font-weight:500;color:#fb7185;background:rgba(244,63,94,.1);padding:.125rem .375rem;border-radius:.25rem;border:1px solid rgba(244,63,94,.2)">REVERTIDO</span>
+          <% } %>
+          <% if (entry.reverte_ref) { %>
+            <span style="font-size:.625rem;font-weight:500;color:#a78bfa;background:rgba(139,92,246,.1);padding:.125rem .375rem;border-radius:.25rem;border:1px solid rgba(139,92,246,.2)">REVERSÃO</span>
+          <% } %>
+          <% if (entry.usuario_email) { %>
+            <span style="font-size:.625rem;color:var(--color-accent);font-weight:500;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="<%= entry.usuario_email %>"><%= entry.usuario_email %></span>
+          <% } %>
+          <span style="margin-left:auto;font-size:.6875rem;color:var(--color-text-muted);font-variant-numeric:tabular-nums"><%= fmtTs(entry.timestamp) %></span>
+        </div>
+
+        <p style="font-size:.875rem;color:var(--color-text-secondary)"><%= getDescription(entry) %></p>
+
+        <% if (entry.justificativa) { %>
+          <p style="font-size:.6875rem;color:var(--color-text-muted);margin-top:.375rem;font-style:italic">"<%= entry.justificativa %>"</p>
+        <% } %>
+
+        <% if (entry.documentacao_url) { %>
+          <a href="<%= entry.documentacao_url %>" target="_blank" download style="display:inline-flex;align-items:center;gap:.375rem;margin-top:.375rem;padding:.25rem .625rem;border-radius:var(--radius-md);font-size:.6875rem;font-weight:500;color:#60a5fa;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);text-decoration:none">
+            📎 <%= entry.documentacao_url.split('/').pop() %>
+          </a>
+        <% } %>
+
+        <!-- Payload Details -->
+        <details style="margin-top:.5rem">
+          <summary style="font-size:.625rem;color:var(--color-text-muted);cursor:pointer">📋 Detalhes da operação</summary>
+          <div style="margin-top:.375rem;font-size:.625rem;background:var(--color-surface-0);border-radius:var(--radius-md);border:1px solid var(--overlay-border);padding:.625rem;font-family:monospace;color:var(--color-text-muted);max-height:200px;overflow:auto;white-space:pre-wrap;word-break:break-all"><%
+            try {
+              const p = entry.payload ? JSON.parse(entry.payload) : { id: entry.id, entidade: entry.entidade, acao: entry.acao }
+              %><%= JSON.stringify(p, null, 2) %><%
+            } catch { %><%= entry.payload || 'N/A' %><% }
+          %></div>
+        </details>
+
+        <!-- Revert button -->
+        <% if (canRevert(entry)) { %>
+          <div style="margin-top:.75rem;padding-top:.5rem;border-top:1px solid var(--overlay-border)">
+            <button class="btn btn-sm" style="background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2);font-size:.75rem"
+                    onclick='openRevertModal("<%= entry.id %>","<%= entry.acao %>","<%= (ENTIDADE_LABELS[entry.entidade] || entry.entidade).replace(/'/g,"\\&#39;") %>")'>
+              ↺ Reverter
+            </button>
+          </div>
+        <% } %>
+      </div>
+    <% }) %>
   </div>
 
-  <% if (totalPages > 1) { %>
-    <div class="pagination">
-      <% for (let p = 1; p <= totalPages; p++) { %>
-        <button class="page-btn <%= p === page ? 'active' : '' %>"
-                hx-get="/auditoria/table?page=<%= p %>"
-                hx-target="#auditoria-table-container">
-          <%= p %>
-        </button>
-      <% } %>
+  <!-- Pagination -->
+  <% if (totalPaginas > 1) { %>
+    <div class="flex items-center" style="justify-content:center;gap:1rem;margin-top:1rem">
+      <button class="btn btn-secondary btn-sm" <%= pagina <= 1 ? 'disabled' : '' %>
+              hx-get="/auditoria/content?pagina=<%= pagina - 1 %>" hx-target="#auditoria-content"
+              hx-include="[name='filtroEntidade'],[name='filtroAcao']">‹</button>
+      <span style="font-size:.875rem;color:var(--color-text-muted);font-variant-numeric:tabular-nums">
+        Página <strong style="color:var(--color-text-primary)"><%= pagina %></strong> de <%= totalPaginas %>
+      </span>
+      <button class="btn btn-secondary btn-sm" <%= pagina >= totalPaginas ? 'disabled' : '' %>
+              hx-get="/auditoria/content?pagina=<%= pagina + 1 %>" hx-target="#auditoria-content"
+              hx-include="[name='filtroEntidade'],[name='filtroAcao']">›</button>
     </div>
   <% } %>
 <% } %>

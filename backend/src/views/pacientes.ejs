@@ -1,70 +1,210 @@
+<%
+const INDICADORES_DESATIVACAO = [
+  { codigo: '01', nome: 'Alta Domiciliar' },
+  { codigo: '03', nome: 'Internação Hospitalar' },
+  { codigo: '04', nome: 'Óbito' },
+];
+function calcularIdade(dataNasc) {
+  if (!dataNasc) return null;
+  const hoje = new Date(); const nasc = new Date(dataNasc);
+  let idade = hoje.getFullYear() - nasc.getFullYear();
+  const m = hoje.getMonth() - nasc.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
+  return idade;
+}
+const convenios = [...new Set(pacientes.map(p => p.convenio))].sort();
+const agrupados = {};
+pacientes.forEach(p => { if (!agrupados[p.convenio]) agrupados[p.convenio] = []; agrupados[p.convenio].push(p); });
+%>
+
 <div class="page-header">
-  <div>
-    <h2>Pacientes</h2>
-    <p>Gestão do cadastro de pacientes AD/ID</p>
-  </div>
   <div class="flex items-center gap-3">
-    <div class="filter-tabs" id="pacientes-status-filter">
-      <button class="filter-tab active" hx-get="/pacientes/table?status=ativo" hx-target="#pacientes-table-container"
-              onclick="document.querySelectorAll('#pacientes-status-filter .filter-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Ativos</button>
-      <button class="filter-tab" hx-get="/pacientes/table?status=inativo" hx-target="#pacientes-table-container"
-              onclick="document.querySelectorAll('#pacientes-status-filter .filter-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Inativos</button>
-      <button class="filter-tab" hx-get="/pacientes/table?status=todos" hx-target="#pacientes-table-container"
-              onclick="document.querySelectorAll('#pacientes-status-filter .filter-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Todos</button>
+    <div style="width:2.5rem;height:2.5rem;border-radius:var(--radius-md);background:rgba(139,92,246,.15);color:#a78bfa;display:flex;align-items:center;justify-content:center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     </div>
-    <button class="btn btn-primary" onclick="document.getElementById('modal-paciente').style.display='flex'">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Novo Paciente
-    </button>
-    <span class="htmx-indicator"><span class="spinner"></span></span>
+    <div>
+      <h2>Pacientes</h2>
+      <p><%= pacientes.length %> <%= filtroStatus === 'ativo' ? 'ativos' : filtroStatus === 'inativo' ? 'inativos' : 'pacientes' %> · <%= convenios.length %> convênios</p>
+    </div>
+  </div>
+  <button class="btn btn-primary" onclick="openPacienteModal()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Novo Paciente
+  </button>
+</div>
+
+<!-- Filtros -->
+<div class="glass-card no-hover" style="padding:.75rem 1rem;position:relative;z-index:10">
+  <div class="flex items-center gap-3" style="flex-wrap:wrap">
+    <div style="flex:1;min-width:200px">
+      <input type="search" class="form-input" placeholder="Buscar por nome..." name="busca" value="<%= typeof busca !== 'undefined' ? busca : '' %>"
+             hx-get="/pacientes/content" hx-trigger="keyup changed delay:400ms, search"
+             hx-target="#pacientes-content" hx-include="[name='filtroStatus'],[name='filtroConvenio']">
+    </div>
+    <select class="form-select" style="width:auto" name="filtroConvenio"
+            hx-get="/pacientes/content" hx-target="#pacientes-content" hx-include="[name='busca'],[name='filtroStatus']">
+      <option value="todos">Todos convênios</option>
+      <% convenios.forEach(function(c) { %>
+        <option value="<%= c %>"><%= c %></option>
+      <% }) %>
+    </select>
+    <div class="filter-tabs" id="pac-status-filter">
+      <% ['ativo','inativo','todos'].forEach(function(s) { %>
+        <button class="filter-tab <%= s === filtroStatus ? 'active' : '' %>"
+                hx-get="/pacientes/content?filtroStatus=<%= s %>"
+                hx-target="#pacientes-content" hx-include="[name='busca'],[name='filtroConvenio']"
+                onclick="document.querySelectorAll('#pac-status-filter .filter-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
+          <%= s === 'ativo' ? 'Ativos' : s === 'inativo' ? 'Inativos' : 'Todos' %>
+        </button>
+      <% }) %>
+      <input type="hidden" name="filtroStatus" value="<%= filtroStatus %>">
+    </div>
   </div>
 </div>
 
-<div id="pacientes-table-container">
-  <%- include('./components/pacientes-table', { pacientes }) %>
+<div id="pacientes-content">
+  <%- include('./components/pacientes-grouped', { pacientes, agrupados, convenios, calcularIdade, INDICADORES_DESATIVACAO }) %>
 </div>
 
-<!-- Modal: Novo Paciente -->
+<!-- Modal: Criar/Editar Paciente -->
 <div class="modal-backdrop" id="modal-paciente" style="display:none" onclick="if(event.target===this)this.style.display='none'">
   <div class="modal-content">
     <div class="modal-header">
-      <h3>Novo Paciente</h3>
+      <h3 id="pac-modal-title">Novo Paciente</h3>
       <button class="btn btn-ghost btn-icon" onclick="this.closest('.modal-backdrop').style.display='none'">&times;</button>
     </div>
-    <form hx-post="/pacientes" hx-target="#pacientes-table-container" hx-swap="innerHTML"
-          hx-on::after-request="if(event.detail.successful){this.closest('.modal-backdrop').style.display='none';this.reset();showToast('Paciente cadastrado!')}">
-      <div class="grid grid-2 gap-3 mb-4">
-        <div class="form-group" style="grid-column:span 2">
-          <label class="form-label">Nome Completo</label>
-          <input type="text" name="nome" class="form-input" required minlength="3" maxlength="200" placeholder="Nome do paciente">
+    <form id="form-paciente" hx-target="#pacientes-content" hx-swap="innerHTML"
+          hx-on::after-request="if(event.detail.successful){document.getElementById('modal-paciente').style.display='none';this.reset();showToast('Paciente salvo!')}">
+      <input type="hidden" name="id" id="pac-edit-id">
+      <div class="space-y-4" style="margin-bottom:1rem">
+        <div class="form-group">
+          <label class="form-label">Nome completo <span style="color:#ef4444">*</span></label>
+          <input type="text" name="nome" id="pac-nome" class="form-input" required minlength="3" maxlength="200" placeholder="Nome do paciente">
+        </div>
+        <div class="grid grid-2 gap-3">
+          <div class="form-group">
+            <label class="form-label">Convênio <span style="color:#ef4444">*</span></label>
+            <select name="convenio" id="pac-convenio" class="form-select" required>
+              <option value="Camperj">Camperj</option>
+              <option value="Unimed">Unimed</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Modalidade <span style="color:#ef4444">*</span></label>
+            <select name="modalidade" id="pac-modalidade" class="form-select" required>
+              <option value="AD">AD</option>
+              <option value="ID">ID</option>
+            </select>
+          </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Data de Nascimento</label>
-          <input type="date" name="data_nascimento" class="form-input">
+          <label class="form-label">Data de nascimento <span style="color:var(--color-text-muted);opacity:.6">(opcional)</span></label>
+          <input type="date" name="data_nascimento" id="pac-nascimento" class="form-input">
         </div>
         <div class="form-group">
-          <label class="form-label">Convênio</label>
-          <select name="convenio" class="form-select" required>
-            <option value="Camperj">Camperj</option>
-            <option value="Unimed">Unimed</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Modalidade</label>
-          <select name="modalidade" class="form-select" required>
-            <option value="AD">AD</option>
-            <option value="ID">ID</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Observações</label>
-          <textarea name="observacoes" class="form-textarea" placeholder="Observações opcionais" maxlength="2000"></textarea>
+          <label class="form-label">Observações <span style="color:var(--color-text-muted);opacity:.6">(opcional)</span></label>
+          <textarea name="observacoes" id="pac-obs" class="form-textarea" placeholder="Informações complementares..." rows="3"></textarea>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').style.display='none'">Cancelar</button>
-        <button type="submit" class="btn btn-primary">Cadastrar</button>
+        <button type="submit" class="btn btn-primary" id="pac-submit-btn">Cadastrar</button>
       </div>
     </form>
   </div>
 </div>
+
+<!-- Modal: Desativar paciente -->
+<div class="modal-backdrop" id="modal-desativar" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-content" style="max-width:28rem">
+    <div class="flex items-center gap-3" style="margin-bottom:1rem">
+      <div style="width:2.5rem;height:2.5rem;border-radius:50%;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
+      </div>
+      <div>
+        <h3>Desativar paciente</h3>
+        <p id="desativar-pac-nome" style="font-size:.75rem;color:var(--color-text-muted)"></p>
+      </div>
+    </div>
+    <p style="font-size:.875rem;color:var(--color-text-muted);margin-bottom:1rem">Desativar é diferente de excluir — o paciente permanece no sistema com histórico preservado, mas ficará inativo.</p>
+    <form id="form-desativar" hx-target="#pacientes-content" hx-swap="innerHTML"
+          hx-on::after-request="if(event.detail.successful){document.getElementById('modal-desativar').style.display='none';showToast('Paciente desativado')}">
+      <div class="space-y-4" style="margin-bottom:1rem">
+        <div class="form-group">
+          <label class="form-label">Justificativa <span style="color:#ef4444">*</span></label>
+          <textarea name="justificativa" class="form-textarea" placeholder="Motivo da desativação..." rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Indicador vinculado <span style="color:var(--color-text-muted);opacity:.6">(opcional)</span></label>
+          <select name="indicador" class="form-select">
+            <option value="">Nenhum</option>
+            <% INDICADORES_DESATIVACAO.forEach(function(ind) { %>
+              <option value="<%= ind.codigo %>"><%= ind.codigo %> — <%= ind.nome %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').style.display='none'">Cancelar</button>
+        <button type="submit" class="btn" style="background:#d97706;color:white">Desativar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Excluir paciente -->
+<div class="modal-backdrop" id="modal-excluir" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-content" style="max-width:24rem">
+    <h3 style="margin-bottom:.5rem">Excluir paciente?</h3>
+    <p style="font-size:.875rem;color:var(--color-text-muted);margin-bottom:1rem">O paciente será removido das listagens. Esta ação pode ser revertida via audit log.</p>
+    <form id="form-excluir" hx-target="#pacientes-content" hx-swap="innerHTML"
+          hx-on::after-request="if(event.detail.successful){document.getElementById('modal-excluir').style.display='none';showToast('Paciente excluído')}">
+      <div class="form-group" style="margin-bottom:1rem">
+        <label class="form-label">Justificativa *</label>
+        <textarea name="justificativa" class="form-textarea" placeholder="Motivo da exclusão..." rows="3" required></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').style.display='none'">Cancelar</button>
+        <button type="submit" class="btn" style="background:#dc2626;color:white">Excluir</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openPacienteModal(p) {
+  const form = document.getElementById('form-paciente');
+  if (p) {
+    document.getElementById('pac-modal-title').textContent = 'Editar Paciente';
+    document.getElementById('pac-edit-id').value = p.id;
+    document.getElementById('pac-nome').value = p.nome;
+    document.getElementById('pac-convenio').value = p.convenio;
+    document.getElementById('pac-modalidade').value = p.modalidade;
+    document.getElementById('pac-nascimento').value = p.data_nascimento || '';
+    document.getElementById('pac-obs').value = p.observacoes || '';
+    document.getElementById('pac-submit-btn').textContent = 'Salvar Alterações';
+    form.setAttribute('hx-put', '/pacientes/' + p.id);
+  } else {
+    document.getElementById('pac-modal-title').textContent = 'Novo Paciente';
+    document.getElementById('pac-edit-id').value = '';
+    form.reset();
+    document.getElementById('pac-submit-btn').textContent = 'Cadastrar';
+    form.setAttribute('hx-post', '/pacientes');
+  }
+  htmx.process(form);
+  document.getElementById('modal-paciente').style.display = 'flex';
+}
+function openDesativarModal(id, nome) {
+  document.getElementById('desativar-pac-nome').textContent = nome;
+  const form = document.getElementById('form-desativar');
+  form.setAttribute('hx-put', '/pacientes/' + id + '/desativar');
+  htmx.process(form);
+  document.getElementById('modal-desativar').style.display = 'flex';
+}
+function openExcluirModal(id) {
+  const form = document.getElementById('form-excluir');
+  form.setAttribute('hx-delete', '/pacientes/' + id);
+  htmx.process(form);
+  document.getElementById('modal-excluir').style.display = 'flex';
+}
+</script>

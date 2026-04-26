@@ -1,21 +1,20 @@
 <div class="page-header">
-  <div>
-    <h2>Metas</h2>
-    <p>Metas e limites de alerta por indicador</p>
-  </div>
   <div class="flex items-center gap-3">
-    <select class="form-select" style="width:auto"
-            hx-get="/metas/table"
-            hx-target="#metas-table-container"
-            name="ano">
-      <% for (let y = new Date().getFullYear(); y >= 2024; y--) { %>
-        <option value="<%= y %>" <%= y === ano ? 'selected' : '' %>><%= y %></option>
-      <% } %>
-    </select>
-    <span class="htmx-indicator"><span class="spinner"></span></span>
+    <div style="width:2.5rem;height:2.5rem;border-radius:var(--radius-md);background:rgba(245,158,11,.15);color:#fbbf24;display:flex;align-items:center;justify-content:center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    </div>
+    <div>
+      <h2>Metas</h2>
+      <p>Configuração de metas e limites de alerta por indicador</p>
+    </div>
   </div>
+  <select class="form-select" style="width:auto" id="metas-ano" onchange="window.location.href='/metas?ano='+this.value">
+    <% [2025,2026,2027].forEach(function(y) { %>
+      <option value="<%= y %>" <%= y === ano ? 'selected' : '' %>><%= y %></option>
+    <% }) %>
+  </select>
 </div>
 
-<div id="metas-table-container">
-  <%- include('./components/metas-table', { metas, indicadores: indicadoresConfig }) %>
+<div id="metas-content">
+  <%- include('./components/metas-table', { metas, ano }) %>
 </div>

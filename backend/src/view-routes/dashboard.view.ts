@@ -1,69 +1,69 @@
 import { Router } from 'express'
 import { getKysely } from '../config/database.js'
-import { INDICADORES_CONFIG, classificarTodos, type IndicadorComMeta } from '../services/semaforo.service.js'
+import { calcularStatus, INDICADORES_CONFIG, type IndicadorComMeta } from '../services/semaforo.service.js'
 
 export const dashboardViewRouter = Router()
 
-function extractIndicadores(registro: Record<string, unknown>, metas: Array<{ indicador_codigo: string; meta_valor: number | null; limite_alerta: number | null; sentido: string }>): IndicadorComMeta[] {
-  const fieldMap: Record<string, string> = {
-    '01': 'taxa_altas_pct',
-    '02': 'intercorrencias_total',
-    '03': 'taxa_internacao_pct',
-    '04': 'obitos_total',
-    '05': 'taxa_alteracao_pad_pct',
-    '06': 'pacientes_total',
-    '07': 'pacientes_infectados',
-    '08': 'eventos_adversos_total',
-    '09': 'ouv_reclamacoes',
-  }
+const CAMPO_MAP: Record<string, string> = {
+  '01': 'taxa_altas_pct', '02': 'intercorrencias_total', '03': 'taxa_internacao_pct',
+  '04': 'obitos_total', '05': 'taxa_alteracao_pad_pct', '06': 'pacientes_total',
+  '07': 'pacientes_infectados', '08': 'eventos_adversos_total', '09': 'ouv_reclamacoes',
+}
 
-  return Object.entries(fieldMap).map(([codigo, campo]) => {
-    const config = INDICADORES_CONFIG[codigo]
-    const meta = metas.find(m => m.indicador_codigo === codigo)
+async function buildSemaforo(db: ReturnType<typeof getKysely>, ano: number, mes: number) {
+  const registro = await db.selectFrom('registros_mensais').selectAll()
+    .where('ano', '=', ano).where('mes', '=', mes).executeTakeFirst()
+
+  const metasRows = await db.selectFrom('metas').selectAll().where('ano', '=', ano).execute()
+  const metasMap = new Map(metasRows.map(m => [m.indicador_codigo, m]))
+
+  const mesAnterior = mes === 1 ? 12 : mes - 1
+  const anoAnterior = mes === 1 ? ano - 1 : ano
+  const regAnterior = await db.selectFrom('registros_mensais').selectAll()
+    .where('ano', '=', anoAnterior).where('mes', '=', mesAnterior).executeTakeFirst()
+
+  const indicadores = Object.entries(INDICADORES_CONFIG).map(([codigo, config]) => {
+    const campo = CAMPO_MAP[codigo]
+    const valor = registro ? Number((registro as Record<string, unknown>)[campo] ?? 0) : 0
+    const valorAnterior = regAnterior ? Number((regAnterior as Record<string, unknown>)[campo] ?? 0) : null
+    const meta = metasMap.get(codigo)
+
+    const ind: IndicadorComMeta = {
+      codigo, nome: config.nome, valor,
+      meta: meta?.meta_valor ?? null, alerta: meta?.limite_alerta ?? null,
+      sentido: (meta?.sentido as 'maior' | 'menor' | 'neutro') ?? config.sentido,
+    }
+
     return {
-      codigo,
-      nome: config?.nome ?? codigo,
-      valor: (registro[campo] as number) ?? 0,
-      meta: meta?.meta_valor ?? null,
-      alerta: meta?.limite_alerta ?? null,
-      sentido: (meta?.sentido ?? config?.sentido ?? 'neutro') as 'maior' | 'menor' | 'neutro',
+      ...ind,
+      status: calcularStatus(ind),
+      variacao: valorAnterior !== null ? Math.round((valor - valorAnterior) * 10) / 10 : null,
     }
   })
+
+  return { indicadores, registro }
 }
 
 // GET /dashboard — full page
-dashboardViewRouter.get('/', async (_req, res) => {
+dashboardViewRouter.get('/', async (req, res) => {
   const db = getKysely()
-  const now = new Date()
-  const ano = Number(_req.query.ano) || now.getFullYear()
-  const mes = Number(_req.query.mes) || now.getMonth() + 1
+  const today = new Date()
+  const ano = Number(req.query.ano) || today.getFullYear()
+  const mes = Number(req.query.mes) || (today.getMonth() + 1)
 
-  const registro = await db.selectFrom('registros_mensais').selectAll()
-    .where('ano', '=', ano).where('mes', '=', mes).executeTakeFirst()
+  const { indicadores, registro } = await buildSemaforo(db, ano, mes)
 
-  const metas = await db.selectFrom('metas').selectAll()
-    .where('ano', '=', ano).execute()
-
-  const raw = registro ? extractIndicadores(registro as Record<string, unknown>, metas) : []
-  const indicadores = classificarTodos(raw)
-
-  res.render('dashboard', { title: 'Dashboard', currentPath: '/dashboard', ano, mes, indicadores })
+  res.render('dashboard', {
+    title: 'Dashboard', currentPath: '/dashboard',
+    ano, mes, indicadores, registro: registro ?? null,
+  })
 })
 
-// GET /dashboard/semaforo — partial (HTMX)
+// GET /dashboard/semaforo — HTMX partial
 dashboardViewRouter.get('/semaforo', async (req, res) => {
   const db = getKysely()
   const ano = Number(req.query.ano) || new Date().getFullYear()
-  const mes = Number(req.query.mes) || new Date().getMonth() + 1
-
-  const registro = await db.selectFrom('registros_mensais').selectAll()
-    .where('ano', '=', ano).where('mes', '=', mes).executeTakeFirst()
-
-  const metas = await db.selectFrom('metas').selectAll()
-    .where('ano', '=', ano).execute()
-
-  const raw = registro ? extractIndicadores(registro as Record<string, unknown>, metas) : []
-  const indicadores = classificarTodos(raw)
-
+  const mes = Number(req.query.mes) || (new Date().getMonth() + 1)
+  const { indicadores } = await buildSemaforo(db, ano, mes)
   res.render('components/semaforo-grid', { layout: false, indicadores })
 })

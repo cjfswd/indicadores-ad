@@ -421,8 +421,102 @@ a:hover { color: var(--color-accent-hover); }
   .semaforo-grid { grid-template-columns: 1fr; }
   .page-header { flex-direction: column; align-items: flex-start; }
   .glass-card:hover { transform: none; }
+  .hide-mobile { display: none !important; }
 }
 
 @media (max-width: 1024px) {
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ─── Space-Y Utility ─── */
+.space-y-2 > * + * { margin-top: .5rem; }
+.space-y-3 > * + * { margin-top: .75rem; }
+.space-y-4 > * + * { margin-top: 1rem; }
+
+/* ─── Collapsible Headers ─── */
+.collapsible-header {
+  width: 100%; display: flex; align-items: center; gap: .5rem;
+  padding: .625rem 1rem;
+  background: var(--color-surface-1); border: 1px solid var(--color-border);
+  color: var(--color-text-primary); cursor: pointer;
+  font-family: inherit; font-size: inherit;
+  transition: background .15s ease;
+}
+.collapsible-header:hover { background: rgba(71,85,105,.3); }
+.collapse-chevron { transition: transform .2s ease; flex-shrink: 0; }
+.collapsible-header.collapsed .collapse-chevron { transform: rotate(-90deg); }
+.collapsible-content.hidden { display: none; }
+
+/* ─── Evento Item (Timeline row) ─── */
+.evento-item {
+  display: flex; align-items: flex-start; gap: .75rem;
+  padding: .625rem .75rem;
+  border-radius: var(--radius-md);
+  background: var(--overlay-soft);
+  border: 1px solid var(--overlay-border);
+  transition: background .15s ease;
+}
+.evento-item:hover { background: rgba(255,255,255,.04); }
+
+/* ─── Avatar ─── */
+.avatar {
+  width: 2.25rem; height: 2.25rem; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; font-weight: 700; color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+/* ─── Paciente Row ─── */
+.paciente-row {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .75rem 1rem;
+  transition: background .1s ease;
+}
+.paciente-row:hover { background: var(--overlay-soft); }
+.paciente-row + .paciente-row { border-top: 1px solid rgba(255,255,255,.05); }
+
+/* ─── Icon Buttons ─── */
+.btn-icon {
+  padding: .375rem; border-radius: var(--radius-sm); border: none; cursor: pointer;
+  background: transparent; color: var(--color-text-muted);
+  transition: all .15s ease; font-family: inherit; display: inline-flex;
+}
+.btn-icon:hover { color: var(--color-accent); background: rgba(59,130,246,.1); }
+.btn-icon-danger { composes: btn-icon; }
+.btn-icon-danger:hover { color: #f87171; background: rgba(239,68,68,.1); }
+.btn-icon-warn { composes: btn-icon; }
+.btn-icon-warn:hover { color: #fbbf24; background: rgba(245,158,11,.1); }
+.btn-icon-success { composes: btn-icon; }
+.btn-icon-success:hover { color: #34d399; background: rgba(16,185,129,.1); }
+
+/* icon button fallback without composes */
+.btn-icon-danger, .btn-icon-warn, .btn-icon-success {
+  padding: .375rem; border-radius: var(--radius-sm); border: none; cursor: pointer;
+  background: transparent; color: var(--color-text-muted);
+  transition: all .15s ease; font-family: inherit; display: inline-flex;
+}
+.btn-icon-danger:hover { color: #f87171; background: rgba(239,68,68,.1); }
+.btn-icon-warn:hover { color: #fbbf24; background: rgba(245,158,11,.1); }
+.btn-icon-success:hover { color: #34d399; background: rgba(16,185,129,.1); }
+
+/* ─── Badge Colors ─── */
+.badge-blue { background: rgba(59,130,246,.15); color: #60a5fa; }
+.badge-violet { background: rgba(139,92,246,.15); color: #a78bfa; }
+
+/* ─── Table Container ─── */
+.table-container {
+  background: var(--glass-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* ─── Additional Animations ─── */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+
+/* ─── Disabled state ─── */
+.btn:disabled, button:disabled {
+  opacity: .4; cursor: not-allowed; pointer-events: none;
 }

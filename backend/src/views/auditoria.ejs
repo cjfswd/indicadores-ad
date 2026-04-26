@@ -1,21 +1,79 @@
 <div class="page-header">
-  <div>
-    <h2>Auditoria</h2>
-    <p>Histórico de alterações e ações no sistema</p>
-  </div>
   <div class="flex items-center gap-3">
-    <input type="search" class="form-input" style="width:220px" placeholder="Buscar por entidade..."
-           hx-get="/auditoria/table"
-           hx-trigger="keyup changed delay:400ms, search"
-           hx-target="#auditoria-table-container"
-           hx-include="[name='page']"
-           name="busca">
-    <span class="htmx-indicator"><span class="spinner"></span></span>
+    <div style="width:2.5rem;height:2.5rem;border-radius:var(--radius-md);background:rgba(6,182,212,.15);color:#22d3ee;display:flex;align-items:center;justify-content:center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3 8a9 9 0 0 1 18 0 9 9 0 0 1-18 0"/></svg>
+    </div>
+    <div>
+      <h2>Logs</h2>
+      <p>Histórico de todas as alterações — <%= total %> registro<%= total !== 1 ? 's' : '' %></p>
+    </div>
   </div>
 </div>
 
-<input type="hidden" name="page" value="1">
-
-<div id="auditoria-table-container">
-  <%- include('./components/auditoria-table', { logs, page, totalPages }) %>
+<!-- Filtros -->
+<div class="glass-card no-hover" style="padding:.75rem 1rem;position:relative;z-index:10">
+  <div class="flex items-center gap-3" style="flex-wrap:wrap">
+    <div class="form-group" style="min-width:180px;margin:0">
+      <label class="form-label" style="margin-bottom:.25rem">Entidade</label>
+      <select class="form-select" name="filtroEntidade"
+              hx-get="/auditoria/content" hx-target="#auditoria-content" hx-include="[name='filtroAcao']">
+        <option value="">Todas</option>
+        <option value="evento_paciente" <%= filtroEntidade === 'evento_paciente' ? 'selected' : '' %>>Eventos Clínicos</option>
+        <option value="registro_mensal" <%= filtroEntidade === 'registro_mensal' ? 'selected' : '' %>>Registros Mensais</option>
+        <option value="paciente" <%= filtroEntidade === 'paciente' ? 'selected' : '' %>>Pacientes</option>
+        <option value="meta" <%= filtroEntidade === 'meta' ? 'selected' : '' %>>Metas</option>
+      </select>
+    </div>
+    <div class="form-group" style="min-width:180px;margin:0">
+      <label class="form-label" style="margin-bottom:.25rem">Ação</label>
+      <select class="form-select" name="filtroAcao"
+              hx-get="/auditoria/content" hx-target="#auditoria-content" hx-include="[name='filtroEntidade']">
+        <option value="">Todas</option>
+        <option value="criar" <%= filtroAcao === 'criar' ? 'selected' : '' %>>Criar</option>
+        <option value="editar" <%= filtroAcao === 'editar' ? 'selected' : '' %>>Editar</option>
+        <option value="confirmar" <%= filtroAcao === 'confirmar' ? 'selected' : '' %>>Confirmar</option>
+        <option value="excluir" <%= filtroAcao === 'excluir' ? 'selected' : '' %>>Excluir / Reverter</option>
+        <option value="desativar" <%= filtroAcao === 'desativar' ? 'selected' : '' %>>Desativar</option>
+        <option value="reativar" <%= filtroAcao === 'reativar' ? 'selected' : '' %>>Reativar</option>
+      </select>
+    </div>
+    <% if (filtroEntidade || filtroAcao) { %>
+      <button class="btn btn-sm btn-ghost" style="align-self:flex-end"
+              onclick="document.querySelector('[name=filtroEntidade]').value='';document.querySelector('[name=filtroAcao]').value='';htmx.trigger(document.querySelector('[name=filtroEntidade]'),'change')">
+        ✕ Limpar filtros
+      </button>
+    <% } %>
+  </div>
 </div>
+
+<div id="auditoria-content">
+  <%- include('./components/auditoria-table', { logs, total, pagina, totalPaginas }) %>
+</div>
+
+<!-- Modal: Confirmar reversão -->
+<div class="modal-backdrop" id="modal-revert" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-content" style="max-width:24rem">
+    <h3 id="revert-title" style="margin-bottom:.75rem">Reverter ação?</h3>
+    <form id="form-revert" hx-target="#auditoria-content" hx-swap="innerHTML"
+          hx-on::after-request="if(event.detail.successful){document.getElementById('modal-revert').style.display='none';showToast('Ação revertida')}">
+      <div class="form-group" style="margin-bottom:1rem">
+        <label class="form-label">Justificativa *</label>
+        <textarea name="justificativa" class="form-textarea" placeholder="Motivo da reversão..." rows="3" required></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').style.display='none'">Cancelar</button>
+        <button type="submit" class="btn" style="background:#d97706;color:white">↺ Reverter</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openRevertModal(id, acao, entidade) {
+  document.getElementById('revert-title').textContent = 'Reverter ' + acao + ' de ' + entidade + '?';
+  const form = document.getElementById('form-revert');
+  form.setAttribute('hx-post', '/auditoria/' + id + '/reverter');
+  htmx.process(form);
+  document.getElementById('modal-revert').style.display = 'flex';
+}
+</script>

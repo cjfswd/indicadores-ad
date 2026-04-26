@@ -1,0 +1,78 @@
+<%
+const sortedConvenios = Object.keys(agrupados).sort();
+%>
+
+<% if (sortedConvenios.length === 0) { %>
+  <div style="text-align:center;padding:4rem 0;color:var(--color-text-muted)">
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 1rem;opacity:.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    <p style="font-size:.875rem;font-weight:500">Nenhum paciente encontrado</p>
+    <p style="font-size:.75rem;margin-top:.25rem">Tente ajustar os filtros ou adicione um novo paciente</p>
+  </div>
+<% } else { %>
+  <div class="space-y-3">
+    <% sortedConvenios.forEach(function(conv, gi) { %>
+      <% const lista = agrupados[conv]; const ativos = lista.filter(p => p.status === 'ativo').length; const inativos = lista.filter(p => p.status === 'inativo').length; %>
+      <div style="animation:fadeIn .3s ease <%= gi * 50 %>ms both">
+        <!-- Grupo Header -->
+        <button class="collapsible-header" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hidden')" style="border-radius:var(--radius-lg) var(--radius-lg) 0 0">
+          <svg class="collapse-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          <span style="font-size:.875rem;font-weight:600;color:var(--color-accent)"><%= conv %></span>
+          <span style="font-size:.75rem;color:var(--color-text-muted)">(<%= lista.length %>)</span>
+          <span style="margin-left:auto;font-size:.75rem;color:var(--color-text-muted)">
+            <%= ativos %> ativos<%= inativos > 0 ? ' · ' + inativos + ' inativos' : '' %>
+          </span>
+        </button>
+
+        <!-- Grupo Content -->
+        <div class="collapsible-content" style="border:1px solid var(--color-border);border-top:0;border-radius:0 0 var(--radius-lg) var(--radius-lg);overflow:hidden">
+          <% lista.forEach(function(p, i) { %>
+            <% const idade = calcularIdade(p.data_nascimento); %>
+            <div class="paciente-row" style="<%= p.status !== 'ativo' ? 'opacity:.5;' : '' %>animation:slideIn .2s ease <%= i * 30 %>ms both">
+              <!-- Avatar -->
+              <div class="avatar" style="background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(139,92,246,.2))">
+                <%= p.nome.split(' ').map(n => n[0]).slice(0,2).join('') %>
+              </div>
+              <div style="flex:1;min-width:0">
+                <p style="font-size:.875rem;font-weight:500;color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= p.nome %></p>
+                <div class="flex items-center gap-2" style="margin-top:.25rem;flex-wrap:wrap">
+                  <span class="badge <%= p.modalidade === 'ID' ? 'badge-violet' : 'badge-blue' %>" style="font-size:.625rem"><%= p.modalidade %></span>
+                  <% if (idade !== null) { %>
+                    <span style="font-size:.6875rem;color:var(--color-text-muted)"><%= idade %> anos</span>
+                  <% } %>
+                  <span style="font-size:.625rem;font-weight:500;<%= p.status === 'ativo' ? 'color:#34d399' : 'color:#f87171' %>">
+                    <%= p.status === 'ativo' ? 'Ativo' : 'Inativo' %>
+                  </span>
+                  <% if (p.status !== 'ativo' && p.motivo_desativacao) { %>
+                    <span style="font-size:.625rem;color:rgba(248,113,113,.6);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="<%= p.motivo_desativacao %>">
+                      <%= p.motivo_desativacao %>
+                    </span>
+                  <% } %>
+                </div>
+              </div>
+              <!-- Actions -->
+              <div class="flex items-center gap-1" style="flex-shrink:0;margin-left:.5rem">
+                <% if (p.status === 'ativo') { %>
+                  <button class="btn-icon-warn" title="Desativar" onclick='openDesativarModal("<%= p.id %>","<%= p.nome.replace(/'/g,"\\&#39;") %>")'>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
+                  </button>
+                <% } else { %>
+                  <button class="btn-icon-success" title="Reativar"
+                          hx-put="/pacientes/<%= p.id %>/reativar" hx-target="#pacientes-content"
+                          hx-confirm="Reativar paciente <%= p.nome %>?">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+                  </button>
+                <% } %>
+                <button class="btn-icon" title="Editar" onclick='openPacienteModal(<%- JSON.stringify({id:p.id,nome:p.nome,convenio:p.convenio,modalidade:p.modalidade,data_nascimento:p.data_nascimento,observacoes:p.observacoes}) %>)'>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </button>
+                <button class="btn-icon-danger" title="Excluir" onclick='openExcluirModal("<%= p.id %>")'>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+<% } %>

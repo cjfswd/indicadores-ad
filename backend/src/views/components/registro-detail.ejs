@@ -1,0 +1,194 @@
+<%
+const GRUPOS = [
+  { codigo: '01', titulo: 'Altas Domiciliares', campos: [
+    { key: 'taxa_altas_pct', label: 'Altas', tipoEvento: 'alta' },
+  ]},
+  { codigo: '02', titulo: 'Intercorrências', campos: [
+    { key: 'intercorrencias_total', label: 'Total', tipoEvento: 'intercorrencia' },
+    { key: 'intercorr_removidas_dom', label: 'Resolvidas domicílio', tipoEvento: 'intercorr_removida_dom' },
+    { key: 'intercorr_necessidade_rem', label: 'Necessidade remoção', tipoEvento: 'intercorr_necessidade_rem' },
+  ]},
+  { codigo: '03', titulo: 'Internação Hospitalar', campos: [
+    { key: 'intern_deterioracao', label: 'Deterioração clínica', tipoEvento: 'intern_deterioracao' },
+    { key: 'intern_nao_aderencia', label: 'Não aderência', tipoEvento: 'intern_nao_aderencia' },
+  ]},
+  { codigo: '04', titulo: 'Óbitos', campos: [
+    { key: 'obitos_total', label: 'Total', tipoEvento: 'obito' },
+    { key: 'obitos_menos_48h', label: '< 48h implantação', tipoEvento: 'obito_menos_48h' },
+    { key: 'obitos_mais_48h', label: '≥ 48h implantação', tipoEvento: 'obito_mais_48h' },
+  ]},
+  { codigo: '07', titulo: 'Controle de Infecção', campos: [
+    { key: 'pacientes_infectados', label: 'Pacientes infectados', tipoEvento: 'infectado' },
+  ]},
+  { codigo: '08', titulo: 'Eventos Adversos', campos: [
+    { key: 'eventos_adversos_total', label: 'Total EA', tipoEvento: 'evento_adverso' },
+    { key: 'ea_quedas', label: 'Quedas', tipoEvento: 'ea_queda' },
+    { key: 'ea_broncoaspiracao', label: 'Broncoaspiração', tipoEvento: 'ea_broncoaspiracao' },
+    { key: 'ea_lesao_pressao', label: 'Lesão por Pressão', tipoEvento: 'ea_lesao_pressao' },
+    { key: 'ea_decanulacao', label: 'Decanulação', tipoEvento: 'ea_decanulacao' },
+    { key: 'ea_saida_gtt', label: 'Saída GTT', tipoEvento: 'ea_saida_gtt' },
+  ]},
+  { codigo: '09', titulo: 'Ouvidorias', campos: [
+    { key: 'ouv_elogios', label: 'Elogios', tipoEvento: 'ouvidoria_elogio' },
+    { key: 'ouv_sugestoes', label: 'Sugestões', tipoEvento: 'ouvidoria_sugestao' },
+    { key: 'ouv_reclamacoes', label: 'Reclamações', tipoEvento: 'ouvidoria_reclamacao' },
+  ]},
+];
+const isLocked = statusReg === 'confirmado';
+const eventosPorTipo = (tipo) => eventos.filter(e => e.tipo_evento === tipo);
+function fmtDate(d) { if (!d) return ''; const parts = d.split('-'); return parts[2]+'/'+parts[1]+'/'+parts[0]; }
+%>
+
+<div class="space-y-4">
+  <% GRUPOS.forEach(function(grupo, gi) { %>
+    <div class="glass-card no-hover" style="overflow:hidden;animation:fadeIn .3s ease <%= gi * 40 %>ms both">
+      <!-- Grupo Header -->
+      <button class="collapsible-header" onclick="this.classList.toggle('collapsed');this.nextElementSibling.classList.toggle('hidden')">
+        <span class="badge badge-muted" style="font-family:monospace;font-size:.7rem"><%= grupo.codigo %></span>
+        <span style="font-size:.875rem;font-weight:600;color:var(--color-accent)"><%= grupo.titulo %></span>
+        <svg class="collapse-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+
+      <!-- Grupo Content -->
+      <div class="collapsible-content" style="border-top:1px solid var(--overlay-border)">
+        <% grupo.campos.forEach(function(campo, ci) { %>
+          <% const val = valores[campo.key] ?? 0; %>
+          <% const evts = eventosPorTipo(campo.tipoEvento); %>
+          <div<%= ci > 0 ? ' style="border-top:1px solid var(--overlay-border)"' : '' %>>
+            <!-- Campo header -->
+            <div class="flex items-center" style="justify-content:space-between;padding:.75rem 1.25rem">
+              <div class="flex items-center gap-3">
+                <span style="font-size:.875rem;font-weight:500;color:var(--color-text-primary)"><%= campo.label %></span>
+                <span style="font-size:1.125rem;font-weight:700;<%= val > 0 ? 'color:var(--color-text-primary)' : 'color:var(--color-surface-3)' %>;font-variant-numeric:tabular-nums"><%= val %></span>
+              </div>
+              <% if (!isLocked) { %>
+                <button class="btn btn-sm" style="background:rgba(16,185,129,.1);color:#34d399;border:1px solid rgba(16,185,129,.2);font-size:.75rem"
+                        onclick="openEventModal('<%= campo.tipoEvento %>', '<%= campo.label %>')">
+                  + <span class="hide-mobile">Registrar</span>
+                </button>
+              <% } %>
+            </div>
+
+            <!-- Lista de eventos -->
+            <% if (evts.length > 0) { %>
+              <div style="padding:0 1.25rem .75rem;display:flex;flex-direction:column;gap:.375rem">
+                <% evts.forEach(function(ev, ei) { %>
+                  <div class="evento-item" style="animation:slideIn .2s ease <%= ei * 30 %>ms both">
+                    <div style="margin-top:.25rem;flex-shrink:0;width:8px;height:8px;border-radius:50%;background:var(--color-accent)"></div>
+                    <div style="flex:1;min-width:0">
+                      <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                        <span style="font-size:.875rem;font-weight:500;color:var(--color-text-primary)"><%= ev.paciente_nome %></span>
+                        <span class="badge badge-muted" style="font-size:.625rem"><%= ev.paciente_convenio %></span>
+                      </div>
+                      <% if (ev.descricao) { %>
+                        <p style="font-size:.75rem;color:var(--color-text-secondary);margin-top:.125rem"><%= ev.descricao %></p>
+                      <% } %>
+                      <div class="flex items-center gap-2" style="margin-top:.25rem;flex-wrap:wrap">
+                        <span style="font-size:.625rem;color:var(--color-text-muted)">📅 <%= ev.data_evento ? fmtDate(ev.data_evento) : '' %></span>
+                        <% if (ev.documentacao_url) { %>
+                          <a href="<%= ev.documentacao_url %>" target="_blank" style="font-size:.625rem;color:#60a5fa;text-decoration:none">📎 Anexo</a>
+                        <% } %>
+                      </div>
+                    </div>
+                    <% if (!isLocked) { %>
+                      <button class="btn-icon-danger" onclick="openDeleteEventModal('<%= ev.id %>')" title="Remover evento">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    <% } %>
+                  </div>
+                <% }) %>
+              </div>
+            <% } else { %>
+              <div style="padding:0 1.25rem .75rem">
+                <p style="font-size:.6875rem;color:var(--color-surface-3);font-style:italic">Nenhum evento registrado</p>
+              </div>
+            <% } %>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<!-- Modal: Registrar Evento -->
+<div class="modal-backdrop" id="modal-evento" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div>
+        <h3>Registrar Evento</h3>
+        <p id="modal-evento-label" style="font-size:.875rem;color:var(--color-accent);font-weight:500;margin-top:.25rem"></p>
+      </div>
+      <button class="btn btn-ghost btn-icon" onclick="this.closest('.modal-backdrop').style.display='none'">&times;</button>
+    </div>
+    <form id="form-evento" hx-post="/registros/eventos" hx-target="#registro-content" hx-swap="innerHTML" hx-encoding="multipart/form-data"
+          hx-on::after-request="if(event.detail.successful){document.getElementById('modal-evento').style.display='none';showToast('Evento registrado!')}">
+      <input type="hidden" name="tipo_evento" id="evento-tipo">
+      <input type="hidden" name="ano" value="<%= ano %>">
+      <input type="hidden" name="mes" value="<%= mes %>">
+      <div class="space-y-4" style="margin-bottom:1rem">
+        <div class="form-group">
+          <label class="form-label">Paciente *</label>
+          <select name="paciente_id" class="form-select" required>
+            <option value="">Selecione...</option>
+            <% pacientes.forEach(function(p) { %>
+              <option value="<%= p.id %>"><%= p.nome %> (<%= p.convenio %> · <%= p.modalidade %>)</option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data do evento</label>
+          <input type="date" name="data_evento" class="form-input" value="<%= new Date().toISOString().slice(0,10) %>">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descrição / Observação</label>
+          <textarea name="descricao" class="form-textarea" placeholder="Detalhes do evento..." rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Anexo (opcional)</label>
+          <input type="file" name="arquivo" class="form-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').style.display='none'">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Registrar Evento</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Confirmar remoção de evento -->
+<div class="modal-backdrop" id="modal-delete-evento" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-content" style="max-width:24rem">
+    <h3 style="margin-bottom:.5rem">Remover evento?</h3>
+    <p style="font-size:.875rem;color:var(--color-text-muted);margin-bottom:1rem">O contador será decrementado e o evento será removido. Esta ação fica registrada na auditoria.</p>
+    <form id="form-delete-evento" hx-target="#registro-content" hx-swap="innerHTML" hx-encoding="multipart/form-data"
+          hx-on::after-request="if(event.detail.successful){document.getElementById('modal-delete-evento').style.display='none';showToast('Evento removido')}">
+      <div class="form-group" style="margin-bottom:1rem">
+        <label class="form-label">Justificativa *</label>
+        <textarea name="justificativa" class="form-textarea" placeholder="Motivo da remoção do evento..." rows="3" required></textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:1rem">
+        <label class="form-label">Anexo (opcional)</label>
+        <input type="file" name="arquivo" class="form-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').style.display='none'">Cancelar</button>
+        <button type="submit" class="btn" style="background:#dc2626;color:white">Remover</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openEventModal(tipo, label) {
+  document.getElementById('evento-tipo').value = tipo;
+  document.getElementById('modal-evento-label').textContent = label;
+  document.getElementById('modal-evento').style.display = 'flex';
+}
+function openDeleteEventModal(id) {
+  const form = document.getElementById('form-delete-evento');
+  form.setAttribute('hx-post', '/registros/eventos/' + id + '/reverter');
+  htmx.process(form);
+  document.getElementById('modal-delete-evento').style.display = 'flex';
+}
+</script>
