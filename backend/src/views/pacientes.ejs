@@ -53,7 +53,7 @@ pacientes.forEach(p => { if (!agrupados[p.convenio]) agrupados[p.convenio] = [];
         <button class="filter-tab <%= s === filtroStatus ? 'active' : '' %>"
                 hx-get="/pacientes/content?filtroStatus=<%= s %>"
                 hx-target="#pacientes-content" hx-include="[name='busca'],[name='filtroConvenio']"
-                onclick="document.querySelectorAll('#pac-status-filter .filter-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
+                onclick="document.querySelectorAll('#pac-status-filter .filter-tab').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.querySelector('[name=filtroStatus]').value='<%= s %>'">
           <%= s === 'ativo' ? 'Ativos' : s === 'inativo' ? 'Inativos' : 'Todos' %>
         </button>
       <% }) %>
