@@ -1,6 +1,6 @@
 import { clsx } from 'clsx'
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
-import type { SemaforoItem } from '@/lib/mock-data'
+import type { SemaforoItem } from '@/lib/chart-helpers'
 import { statusLabel } from '@/lib/chart-helpers'
 
 const STATUS_STYLES = {

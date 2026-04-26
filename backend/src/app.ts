@@ -27,7 +27,7 @@ app.set('layout', 'layouts/main')
 app.use(ejsLayouts)
 
 // ─── Static Files ───
-app.use(express.static(path.join(__dirname, '..', '..', 'public')))
+app.use(express.static(path.join(__dirname, '..', 'public')))
 
 // ─── Segurança ───
 app.use(helmet({

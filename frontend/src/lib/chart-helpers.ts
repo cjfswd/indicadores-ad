@@ -44,3 +44,17 @@ export function statusColor(status: string): string {
     default: return CHART_COLORS.muted
   }
 }
+
+// ── Dashboard Domain Types ──
+
+export interface SemaforoItem {
+  codigo: string
+  nome: string
+  valor: number
+  unidade: '%' | 'abs'
+  status: 'verde' | 'amarelo' | 'vermelho' | 'neutro'
+  meta: number | null
+  alerta: number | null
+  variacao: number | null
+  subtipos: { nome: string; valor: number }[]
+}
