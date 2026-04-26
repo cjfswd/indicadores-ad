@@ -1,6 +1,0 @@
-export { dashboardViewRouter } from './dashboard.view.js'
-export { registrosViewRouter } from './registros.view.js'
-export { pacientesViewRouter } from './pacientes.view.js'
-export { metasViewRouter } from './metas.view.js'
-export { auditoriaViewRouter } from './auditoria.view.js'
-export { authViewRouter } from './auth.view.js'
