@@ -1,0 +1,50 @@
+<% if (!logs || logs.length === 0) { %>
+  <div class="empty-state">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    <p>Nenhum registro de auditoria encontrado.</p>
+  </div>
+<% } else { %>
+  <div class="glass-card no-hover" style="overflow-x:auto">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Data/Hora</th>
+          <th>Ação</th>
+          <th>Entidade</th>
+          <th>Usuário</th>
+          <th>Campo</th>
+          <th>Valor Anterior</th>
+          <th>Valor Novo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% logs.forEach(function(log) { %>
+          <tr>
+            <td class="text-xs font-mono"><%= new Date(log.timestamp).toLocaleString('pt-BR') %></td>
+            <td>
+              <% const acaoMap = { criar:'badge-verde', editar:'badge-neutro', confirmar:'badge-verde', excluir:'badge-vermelho', desativar:'badge-amarelo', reativar:'badge-verde' }; %>
+              <span class="badge <%= acaoMap[log.acao] || 'badge-muted' %>"><%= log.acao %></span>
+            </td>
+            <td><%= log.entidade %></td>
+            <td class="text-xs"><%= log.usuario_email || '—' %></td>
+            <td class="text-xs"><%= log.campo_alterado || '—' %></td>
+            <td class="text-xs" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= log.valor_anterior || '—' %></td>
+            <td class="text-xs" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= log.valor_novo || '—' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if (totalPages > 1) { %>
+    <div class="pagination">
+      <% for (let p = 1; p <= totalPages; p++) { %>
+        <button class="page-btn <%= p === page ? 'active' : '' %>"
+                hx-get="/auditoria/table?page=<%= p %>"
+                hx-target="#auditoria-table-container">
+          <%= p %>
+        </button>
+      <% } %>
+    </div>
+  <% } %>
+<% } %>

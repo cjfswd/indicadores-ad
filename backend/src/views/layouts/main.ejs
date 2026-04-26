@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistema de Indicadores de Atenção Domiciliar (AD/ID) — Health+ Cuidados">
+  <title><%= typeof title !== 'undefined' ? title + ' — ' : '' %>Indicadores AD</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/htmx.min.js"></script>
+</head>
+<body>
+  <div class="app-layout">
+    <%- include('../partials/sidebar', { currentPath: typeof currentPath !== 'undefined' ? currentPath : '/' }) %>
+    <main class="main-content animate-fade-in" id="main-content">
+      <div id="toast-container" class="toast-container"></div>
+      <%- body %>
+    </main>
+  </div>
+
+  <script>
+    // ─── Toast helper ───
+    function showToast(msg, type = 'success') {
+      const c = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = 'toast toast-' + type;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+    }
+
+    // ─── HTMX after-swap toast ───
+    document.body.addEventListener('htmx:afterSwap', function(e) {
+      const msg = e.detail.xhr?.getResponseHeader('HX-Trigger-After-Swap');
+      if (msg) {
+        try { const d = JSON.parse(msg); showToast(d.message, d.type); } catch {}
+      }
+    });
+
+    // ─── HTMX error handler ───
+    document.body.addEventListener('htmx:responseError', function(e) {
+      showToast('Erro ao processar requisição', 'error');
+    });
+
+    // ─── Mobile sidebar toggle ───
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    // ─── Theme toggle ───
+    function toggleTheme() {
+      document.documentElement.classList.toggle('light');
+      localStorage.setItem('theme', document.documentElement.classList.contains('light') ? 'light' : 'dark');
+    }
+    if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light');
+  </script>
+</body>
+</html>

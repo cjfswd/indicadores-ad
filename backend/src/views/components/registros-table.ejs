@@ -1,0 +1,56 @@
+<% if (!registros || registros.length === 0) { %>
+  <div class="empty-state">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    <p>Nenhum registro encontrado para este ano.</p>
+  </div>
+<% } else { %>
+  <div class="glass-card no-hover" style="overflow-x:auto">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Mês</th>
+          <th>Status</th>
+          <th>Pacientes</th>
+          <th>AD/ID</th>
+          <th>Altas %</th>
+          <th>Intern. %</th>
+          <th>Óbitos</th>
+          <th>EA</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% const meses = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']; %>
+        <% registros.forEach(function(r) { %>
+          <tr>
+            <td style="font-weight:600;color:var(--color-text-primary)"><%= meses[r.mes] %> <%= r.ano %></td>
+            <td>
+              <span class="badge <%= r.status === 'confirmado' ? 'badge-verde' : 'badge-amarelo' %>">
+                <%= r.status === 'confirmado' ? 'Confirmado' : 'Rascunho' %>
+              </span>
+            </td>
+            <td><%= r.pacientes_total ?? '—' %></td>
+            <td><%= r.pacientes_ad ?? '—' %>/<%= r.pacientes_id ?? '—' %></td>
+            <td><%= r.taxa_altas_pct != null ? r.taxa_altas_pct.toFixed(1) + '%' : '—' %></td>
+            <td><%= r.taxa_internacao_pct != null ? r.taxa_internacao_pct.toFixed(1) + '%' : '—' %></td>
+            <td><%= r.obitos_total ?? '—' %></td>
+            <td><%= r.eventos_adversos_total ?? '—' %></td>
+            <td>
+              <div class="flex gap-2">
+                <% if (r.status !== 'confirmado') { %>
+                  <button class="btn btn-ghost btn-sm"
+                          hx-put="/registros/<%= r.id %>/confirmar"
+                          hx-target="#registros-table-container"
+                          hx-confirm="Confirmar o registro de <%= meses[r.mes] %>/<%= r.ano %>? Esta ação não pode ser desfeita facilmente.">
+                    Confirmar
+                  </button>
+                <% } %>
+                <a href="/registros/<%= r.ano %>/<%= r.mes %>" class="btn btn-ghost btn-sm">Ver</a>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+<% } %>

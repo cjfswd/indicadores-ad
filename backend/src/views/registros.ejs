@@ -1,0 +1,95 @@
+<div class="page-header">
+  <div>
+    <h2>Registros Mensais</h2>
+    <p>Dados consolidados dos indicadores por mês</p>
+  </div>
+  <div class="flex items-center gap-3">
+    <select class="form-select" style="width:auto"
+            hx-get="/registros/table"
+            hx-target="#registros-table-container"
+            name="ano">
+      <% for (let y = new Date().getFullYear(); y >= 2024; y--) { %>
+        <option value="<%= y %>" <%= y === ano ? 'selected' : '' %>><%= y %></option>
+      <% } %>
+    </select>
+    <button class="btn btn-primary" onclick="document.getElementById('modal-registro').style.display='flex'">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Novo Registro
+    </button>
+    <span class="htmx-indicator"><span class="spinner"></span></span>
+  </div>
+</div>
+
+<div id="registros-table-container">
+  <%- include('../components/registros-table', { registros }) %>
+</div>
+
+<!-- Modal: Novo Registro -->
+<div class="modal-backdrop" id="modal-registro" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Novo Registro Mensal</h3>
+      <button class="btn btn-ghost btn-icon" onclick="this.closest('.modal-backdrop').style.display='none'">&times;</button>
+    </div>
+    <form hx-post="/registros" hx-target="#registros-table-container" hx-swap="innerHTML"
+          hx-on::after-request="if(event.detail.successful){this.closest('.modal-backdrop').style.display='none';showToast('Registro criado!')}">
+      <div class="grid grid-2 gap-3 mb-4">
+        <div class="form-group">
+          <label class="form-label">Ano</label>
+          <input type="number" name="ano" class="form-input" value="<%= new Date().getFullYear() %>" required min="2020" max="2099">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mês</label>
+          <select name="mes" class="form-select" required>
+            <% const nomes = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']; %>
+            <% for (let m = 1; m <= 12; m++) { %>
+              <option value="<%= m %>" <%= m === new Date().getMonth()+1 ? 'selected' : '' %>><%= nomes[m] %></option>
+            <% } %>
+          </select>
+        </div>
+      </div>
+
+      <h4 style="font-size:.875rem;font-weight:600;margin-bottom:.75rem;color:var(--color-text-secondary)">Indicadores</h4>
+
+      <div class="grid grid-2 gap-3 mb-4">
+        <div class="form-group">
+          <label class="form-label">Taxa de Altas (%)</label>
+          <input type="number" step="0.1" name="taxa_altas_pct" class="form-input" placeholder="0.0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pacientes Total</label>
+          <input type="number" name="pacientes_total" class="form-input" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pacientes AD</label>
+          <input type="number" name="pacientes_ad" class="form-input" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pacientes ID</label>
+          <input type="number" name="pacientes_id" class="form-input" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Intercorrências</label>
+          <input type="number" name="intercorrencias_total" class="form-input" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Taxa Internação (%)</label>
+          <input type="number" step="0.1" name="taxa_internacao_pct" class="form-input" placeholder="0.0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Óbitos Total</label>
+          <input type="number" name="obitos_total" class="form-input" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Eventos Adversos</label>
+          <input type="number" name="eventos_adversos_total" class="form-input" placeholder="0">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-backdrop').style.display='none'">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar Registro</button>
+      </div>
+    </form>
+  </div>
+</div>

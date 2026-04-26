@@ -1,0 +1,21 @@
+<div class="page-header">
+  <div>
+    <h2>Auditoria</h2>
+    <p>Histórico de alterações e ações no sistema</p>
+  </div>
+  <div class="flex items-center gap-3">
+    <input type="search" class="form-input" style="width:220px" placeholder="Buscar por entidade..."
+           hx-get="/auditoria/table"
+           hx-trigger="keyup changed delay:400ms, search"
+           hx-target="#auditoria-table-container"
+           hx-include="[name='page']"
+           name="busca">
+    <span class="htmx-indicator"><span class="spinner"></span></span>
+  </div>
+</div>
+
+<input type="hidden" name="page" value="1">
+
+<div id="auditoria-table-container">
+  <%- include('../components/auditoria-table', { logs, page, totalPages }) %>
+</div>
