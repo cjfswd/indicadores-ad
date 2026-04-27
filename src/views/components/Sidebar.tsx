@@ -1,42 +1,51 @@
 import type { FC } from 'hono/jsx'
+import { LayoutDashboard, ClipboardList, Users, Target, History, Activity, Sun } from './Icons.js'
 
 interface SidebarProps {
   currentPath: string
 }
 
 const NAV_ITEMS = [
-  { path: '/dashboard', label: 'Dashboard', icon: 'M4 5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5zM14 5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V5zM4 15a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2zM14 13a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-5z' },
-  { path: '/registros', label: 'Registros Mensais', icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2' },
-  { path: '/pacientes', label: 'Pacientes', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z' },
-  { path: '/metas', label: 'Metas', icon: 'M22 12h-4l-3 9L9 3l-3 9H2' },
-  { path: '/auditoria', label: 'Auditoria', icon: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' },
-]
+  { path: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
+  { path: '/registros', label: 'Registros Mensais', Icon: ClipboardList },
+  { path: '/pacientes', label: 'Pacientes', Icon: Users },
+  { path: '/metas', label: 'Metas', Icon: Target },
+  { path: '/auditoria', label: 'Logs', Icon: History },
+] as const
 
 export const Sidebar: FC<SidebarProps> = ({ currentPath }) => (
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <a href="/dashboard" style="text-decoration:none">
-        <h1 class="sidebar-title">Indicadores AD</h1>
-        <p class="sidebar-subtitle">Health+ Cuidados</p>
+  <aside class="w-[260px] bg-(--color-surface-1) border-r border-(--color-border) flex flex-col py-6 fixed top-0 left-0 bottom-0 z-40 transition-transform duration-250 sidebar-mobile-hidden">
+    <div class="flex items-center gap-3 px-5 pb-6 border-b border-(--color-border) mb-4">
+      <div class="shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center">
+        <Activity size={20} class="text-white" />
+      </div>
+      <a href="/dashboard" class="no-underline">
+        <h1 class="text-sm font-bold text-(--color-text-primary) tracking-tight leading-none">Indicadores AD</h1>
+        <span class="text-[.6875rem] text-(--color-text-muted) font-medium">Atenção Domiciliar</span>
       </a>
     </div>
-    <nav class="sidebar-nav">
-      {NAV_ITEMS.map((item) => (
+    <nav class="flex-1 flex flex-col gap-0.5 px-3">
+      {NAV_ITEMS.map(({ path, label, Icon }) => (
         <a
-          key={item.path}
-          href={item.path}
-          class={`nav-item ${currentPath === item.path ? 'nav-item-active' : ''}`}
+          key={path}
+          href={path}
+          class={`flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium transition-all duration-200 no-underline ${
+            currentPath === path
+              ? 'bg-(--color-accent)/15 text-(--color-accent) shadow-sm'
+              : 'text-(--color-text-secondary) hover:text-(--color-text-primary) hover:bg-[var(--overlay-soft)]'
+          }`}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d={item.icon} />
-          </svg>
-          {item.label}
+          <Icon size={20} class="shrink-0" />
+          {label}
         </a>
       ))}
     </nav>
-    <div class="sidebar-footer">
-      <button class="nav-item" hx-on:click="toggleTheme()" style="width:100%;border:none;cursor:pointer;background:transparent">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>
+    <div class="px-3 pt-4 border-t border-(--color-border)">
+      <button
+        class="flex items-center gap-3 py-2.5 px-3 rounded-lg text-sm font-medium text-(--color-text-muted) hover:text-(--color-text-primary) hover:bg-[var(--overlay-soft)] transition-colors duration-200 w-full border-none cursor-pointer bg-transparent"
+        hx-on:click="toggleTheme()"
+      >
+        <Sun size={18} class="shrink-0" />
         Alternar Tema
       </button>
     </div>

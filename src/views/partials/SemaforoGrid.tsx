@@ -1,4 +1,6 @@
 import type { FC } from 'hono/jsx'
+import { Info } from '../components/Icons.js'
+import { CARD } from '../ui.js'
 
 interface SemaforoIndicador {
   codigo: string
@@ -10,35 +12,103 @@ interface SemaforoIndicador {
   status: string
 }
 
+const GLOW: Record<string, string> = {
+  verde: 'shadow-(--shadow-glow-verde) border-emerald-500/20',
+  amarelo: 'shadow-(--shadow-glow-amarelo) border-amber-500/20',
+  vermelho: 'shadow-(--shadow-glow-vermelho) border-red-500/20',
+}
+const DOT: Record<string, string> = {
+  verde: 'bg-(--color-semaforo-verde)',
+  amarelo: 'bg-(--color-semaforo-amarelo)',
+  vermelho: 'bg-(--color-semaforo-vermelho)',
+  neutro: 'bg-(--color-semaforo-neutro)',
+}
+const BAR: Record<string, string> = {
+  verde: 'bg-emerald-500',
+  amarelo: 'bg-amber-500',
+  vermelho: 'bg-red-500',
+  neutro: 'bg-blue-500',
+}
+const STATUS_TEXT: Record<string, string> = {
+  verde: 'text-emerald-400',
+  amarelo: 'text-amber-400',
+  vermelho: 'text-red-400',
+  neutro: 'text-blue-400',
+}
+const STATUS_LABEL: Record<string, string> = {
+  verde: 'Dentro da meta',
+  amarelo: 'Atenção',
+  vermelho: 'Fora da meta',
+  neutro: 'Sem meta',
+}
+
 export const SemaforoGrid: FC<{ indicadores: SemaforoIndicador[] }> = ({ indicadores }) => {
   if (!indicadores || indicadores.length === 0) {
     return (
-      <div class="empty-state">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-        <p>Nenhum registro encontrado para este período.</p>
+      <div class="text-center py-12 px-4 text-(--color-text-muted)">
+        <Info size={48} class="mx-auto mb-4 opacity-40" />
+        <p class="text-sm">Nenhum registro encontrado para este período.</p>
       </div>
     )
   }
   return (
-    <div class="semaforo-grid">
-      {indicadores.map(ind => {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+      {indicadores.map((ind, i) => {
         const fmtValor = (typeof ind.valor !== 'number') ? '—' : (ind.valor % 1 !== 0 ? `${ind.valor.toFixed(1)}%` : String(ind.valor))
+        const progressPct = ind.meta && ind.meta > 0 && typeof ind.valor === 'number'
+          ? Math.min(100, Math.round((ind.valor / ind.meta) * 100))
+          : null
         return (
-          <div class={`glass-card semaforo-card glow-${ind.status}`}>
-            <div class="flex items-center justify-between">
-              <span class="indicator-code">Indicador {ind.codigo}</span>
-              <span class={`semaforo-dot dot-${ind.status}`}></span>
+          <div
+            class={`${CARD} hover:scale-[1.02] active:scale-[0.99] ${GLOW[ind.status] ?? ''}`}
+            style={`animation:fadeIn .3s ease ${i * 60}ms both`}
+          >
+            {/* Header */}
+            <div class="flex items-center justify-between mb-2 sm:mb-3">
+              <div class="flex items-center gap-2">
+                <span class={`w-2.5 h-2.5 rounded-full inline-block animate-[pulse-dot_2s_ease-in-out_infinite] ${DOT[ind.status] ?? DOT.neutro}`}></span>
+                <span class="text-xs font-semibold text-(--color-text-muted) uppercase tracking-wider">{ind.codigo}</span>
+              </div>
             </div>
-            <div class="indicator-name">{ind.nome}</div>
-            <div class="flex items-center gap-3">
-              <span class="indicator-value" style={`color: var(--color-semaforo-${ind.status})`}>{fmtValor}</span>
-              <span class={`badge badge-${ind.status}`}>{ind.status.charAt(0).toUpperCase() + ind.status.slice(1)}</span>
-            </div>
-            <div class="indicator-meta">
-              {ind.meta !== null
-                ? <>Meta: {ind.meta}{ind.sentido !== 'neutro' && ['01','03','05'].includes(ind.codigo) ? '%' : ''}{ind.alerta !== null ? ` · Alerta: ${ind.alerta}` : ''}</>
-                : 'Sem meta definida'}
-            </div>
+
+            {/* Name + Value */}
+            <p class="text-sm font-medium text-(--color-text-secondary) leading-tight mb-1 truncate">{ind.nome}</p>
+            <p class="text-xl sm:text-2xl font-bold text-(--color-text-primary) tabular-nums">{fmtValor}</p>
+
+            {/* Status label */}
+            <p class={`text-[.625rem] font-medium mt-1 ${STATUS_TEXT[ind.status] ?? STATUS_TEXT.neutro}`}>
+              {STATUS_LABEL[ind.status] ?? STATUS_LABEL.neutro}
+            </p>
+
+            {/* Progress bar */}
+            {progressPct !== null && (
+              <div class="mt-3">
+                <div class="flex items-center justify-between text-[.625rem] text-(--color-text-muted) mb-1">
+                  <span>Progresso</span>
+                  <span class="tabular-nums">{progressPct}%</span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-[var(--overlay-soft)] overflow-hidden">
+                  <div
+                    class={`h-full rounded-full transition-all duration-500 ${BAR[ind.status] ?? BAR.neutro}`}
+                    style={`width:${progressPct}%`}
+                  ></div>
+                </div>
+              </div>
+            )}
+
+            {/* Meta info */}
+            {ind.meta !== null && (
+              <div class="mt-2 pt-2 border-t border-[var(--overlay-border)] flex items-center justify-between">
+                <span class="text-[.625rem] text-(--color-text-muted)">
+                  Meta: {ind.meta}{['01','03','05'].includes(ind.codigo) ? '%' : ''}
+                </span>
+                {ind.alerta !== null && (
+                  <span class="text-[.625rem] text-amber-400">
+                    Alerta: {ind.alerta}{['01','03','05'].includes(ind.codigo) ? '%' : ''}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         )
       })}

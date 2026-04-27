@@ -51,10 +51,10 @@ export const TIPO_EVENTO_LABELS: Record<string, string> = {
   intercorr_necessidade_rem: 'Necessidade remoção',
 }
 
-export const SENTIDO_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  maior: { label: '↑ Maior melhor', color: '#34d399', bg: 'rgba(16,185,129,.12)' },
-  menor: { label: '↓ Menor melhor', color: '#f87171', bg: 'rgba(239,68,68,.12)' },
-  neutro: { label: '→ Neutro', color: '#60a5fa', bg: 'rgba(59,130,246,.12)' },
+export const SENTIDO_CONFIG: Record<string, { label: string; color: string; bg: string; cls: string; arrow: string; barCls: string }> = {
+  maior: { label: 'Maior melhor', color: '#34d399', bg: 'rgba(16,185,129,.12)', cls: 'text-emerald-400', arrow: '↑', barCls: 'bg-emerald-500' },
+  menor: { label: 'Menor melhor', color: '#f87171', bg: 'rgba(239,68,68,.12)', cls: 'text-red-400', arrow: '↓', barCls: 'bg-red-500' },
+  neutro: { label: 'Neutro', color: '#60a5fa', bg: 'rgba(59,130,246,.12)', cls: 'text-blue-400', arrow: '→', barCls: 'bg-blue-500' },
 }
 
 export const ACAO_COLORS: Record<string, { bg: string; text: string }> = {

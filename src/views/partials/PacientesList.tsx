@@ -1,58 +1,59 @@
 import type { FC } from 'hono/jsx'
 import { calcularIdade } from '../helpers.js'
+import { Pencil, Trash2, Pause, Play } from '../components/Icons.js'
+import { CARD, BTN_ICON } from '../ui.js'
 
 interface Paciente {
   id: string; nome: string; convenio: string; modalidade: string
-  status: string; data_nascimento: string | null; motivo_desativacao: string | null
+  data_nascimento: string | null; status: string; observacoes: string | null
 }
 
 export const PacientesList: FC<{ agrupados: Record<string, Paciente[]> }> = ({ agrupados }) => {
-  const grupos = Object.entries(agrupados)
-  if (grupos.length === 0) {
-    return (
-      <div style="text-align:center;padding:4rem 0;color:var(--color-text-muted)">
-        <p style="font-size:.875rem">Nenhum paciente encontrado</p>
-      </div>
-    )
+  const entries = Object.entries(agrupados)
+
+  if (entries.length === 0) {
+    return <div class="text-center py-16 text-(--color-text-muted)"><p class="text-sm">Nenhum paciente encontrado</p></div>
   }
+
   return (
-    <div class="space-y-6">
-      {grupos.map(([convenio, pacientes]) => (
+    <div class="flex flex-col gap-4 sm:gap-6">
+      {entries.map(([convenio, lista]) => (
         <div>
-          <h3 style="font-size:.875rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem;padding-left:.25rem">{convenio} <span style="opacity:.5;font-weight:400">({pacientes.length})</span></h3>
-          <div class="space-y-2">
-            {pacientes.map((p, i) => {
-              const idade = calcularIdade(p.data_nascimento)
-              return (
-                <div class="glass-card no-hover" style={`padding:.875rem 1rem;animation:fadeIn .3s ease ${i * 30}ms both`}>
-                  <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:.5rem">
-                    <div class="flex items-center gap-3">
-                      <div style={`width:2rem;height:2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;${p.status === 'inativo' ? 'background:rgba(245,158,11,.15);color:#fbbf24' : 'background:rgba(59,130,246,.15);color:#60a5fa'}`}>
-                        {p.nome.charAt(0)}
+          <h3 class="text-xs font-bold text-(--color-text-muted) uppercase tracking-widest mb-3">{convenio} ({lista.length})</h3>
+          <div class="flex flex-col gap-2">
+            {lista.map((p, i) => (
+              <div class={`${CARD} !py-3 !px-4`} style={`animation:fadeIn .3s ease ${i * 40}ms both`}>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-(--color-accent)/15 text-(--color-accent) flex items-center justify-center text-sm font-bold shrink-0">{p.nome.charAt(0)}</div>
+                    <div>
+                      <p class="text-sm font-semibold text-(--color-text-primary)">{p.nome}</p>
+                      <div class="flex items-center gap-2 text-[.6875rem] text-(--color-text-muted) mt-0.5">
+                        <span class="inline-block px-1.5 py-0.5 rounded text-[.625rem] font-bold bg-(--color-accent)/15 text-(--color-accent)">{p.modalidade}</span>
+                        {p.data_nascimento && <span>{calcularIdade(p.data_nascimento)} anos</span>}
                       </div>
-                      <div>
-                        <span style="font-weight:600;color:var(--color-text-primary)">{p.nome}</span>
-                        <div class="flex items-center gap-2" style="margin-top:.125rem">
-                          <span class="badge badge-muted">{p.modalidade}</span>
-                          {idade !== null && <span style="font-size:.6875rem;color:var(--color-text-muted)">{idade} anos</span>}
-                          {p.status === 'inativo' && <span style="font-size:.625rem;font-weight:500;color:#fbbf24;background:rgba(245,158,11,.1);padding:.125rem .375rem;border-radius:.25rem">INATIVO</span>}
-                          {p.motivo_desativacao && <span style="font-size:.625rem;color:var(--color-text-muted);font-style:italic">{p.motivo_desativacao}</span>}
-                        </div>
-                      </div>
-                    </div>
-                    <div class="flex gap-1">
-                      <button class="btn btn-sm btn-ghost" hx-get={`/pacientes/${p.id}/modal/editar`} hx-target="#modal-container" hx-swap="innerHTML" title="Editar">✏️</button>
-                      {p.status === 'ativo' ? (
-                        <button class="btn btn-sm btn-ghost" hx-get={`/pacientes/${p.id}/modal/desativar`} hx-target="#modal-container" hx-swap="innerHTML" title="Desativar" style="color:#fbbf24">⏸</button>
-                      ) : p.status === 'inativo' ? (
-                        <button class="btn btn-sm btn-ghost" hx-put={`/pacientes/${p.id}/reativar`} hx-target="#pacientes-content" hx-swap="innerHTML" title="Reativar" style="color:#34d399">▶</button>
-                      ) : null}
-                      <button class="btn btn-sm btn-ghost" hx-get={`/pacientes/${p.id}/modal/excluir`} hx-target="#modal-container" hx-swap="innerHTML" title="Excluir" style="color:#f87171">🗑</button>
                     </div>
                   </div>
+                  <div class="flex gap-1">
+                    <button class={`${BTN_ICON} text-(--color-text-secondary) hover:text-(--color-text-primary)`} hx-get={`/pacientes/${p.id}/modal/editar`} hx-target="#modal-container" hx-swap="innerHTML" title="Editar">
+                      <Pencil size={14} />
+                    </button>
+                    {p.status === 'ativo' ? (
+                      <button class={`${BTN_ICON} text-amber-300 hover:text-amber-200`} hx-get={`/pacientes/${p.id}/modal/desativar`} hx-target="#modal-container" hx-swap="innerHTML" title="Desativar">
+                        <Pause size={14} />
+                      </button>
+                    ) : (
+                      <button class={`${BTN_ICON} text-teal-300 hover:text-teal-200`} hx-put={`/pacientes/${p.id}/reativar`} hx-target="#pacientes-content" hx-swap="innerHTML" title="Reativar">
+                        <Play size={14} />
+                      </button>
+                    )}
+                    <button class={`${BTN_ICON} text-red-400 hover:text-red-300`} hx-get={`/pacientes/${p.id}/modal/excluir`} hx-target="#modal-container" hx-swap="innerHTML" title="Excluir">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
-              )
-            })}
+              </div>
+            ))}
           </div>
         </div>
       ))}

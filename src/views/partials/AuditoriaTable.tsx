@@ -1,5 +1,7 @@
 import type { FC } from 'hono/jsx'
 import { ACAO_COLORS, ENTIDADE_LABELS, getAuditDescription, canRevert, renderAuditPayload, fmtTs } from '../helpers.js'
+import { Undo2, Paperclip, ChevronLeft, ChevronRight } from '../components/Icons.js'
+import { CARD, BTN_SM, BADGE } from '../ui.js'
 
 interface AuditEntry {
   id: string; entidade: string; entidade_id: string; acao: string
@@ -9,47 +11,72 @@ interface AuditEntry {
   timestamp: string; revertido: boolean; reverte_ref: string | null
 }
 
-interface AuditoriaTableProps {
+export interface AuditoriaTableProps {
   logs: AuditEntry[]
   pagina: number
   totalPaginas: number
 }
 
+const ACAO_DOT: Record<string, string> = {
+  criar: 'bg-emerald-500', editar: 'bg-amber-500', confirmar: 'bg-blue-500',
+  excluir: 'bg-red-500', reverter: 'bg-orange-500', desativar: 'bg-amber-500',
+  reativar: 'bg-teal-500', reverter_criacao: 'bg-orange-500', reverter_exclusao: 'bg-cyan-500',
+  reverter_edicao: 'bg-violet-500', reverter_confirmacao: 'bg-sky-500',
+  reverter_desativacao: 'bg-teal-500', reverter_reativacao: 'bg-amber-500',
+}
+
+const ACAO_STYLES: Record<string, string> = {
+  criar: 'bg-emerald-500/15 text-emerald-400', editar: 'bg-amber-500/15 text-amber-400',
+  confirmar: 'bg-blue-500/15 text-blue-400', excluir: 'bg-red-500/15 text-red-400',
+  reverter: 'bg-orange-500/15 text-orange-400', desativar: 'bg-amber-500/15 text-amber-400',
+  reativar: 'bg-teal-500/15 text-teal-400', reverter_criacao: 'bg-orange-500/15 text-orange-400',
+  reverter_exclusao: 'bg-cyan-500/15 text-cyan-400', reverter_edicao: 'bg-violet-500/15 text-violet-400',
+  reverter_confirmacao: 'bg-sky-500/15 text-sky-400',
+  reverter_desativacao: 'bg-teal-500/15 text-teal-400',
+  reverter_reativacao: 'bg-amber-500/15 text-amber-400',
+}
+
 export const AuditoriaTable: FC<AuditoriaTableProps> = ({ logs, pagina, totalPaginas }) => {
   if (logs.length === 0) {
     return (
-      <div style="text-align:center;padding:4rem 0;color:var(--color-text-muted)">
-        <p style="font-size:.875rem">Nenhum registro de auditoria encontrado</p>
+      <div class="text-center py-16 text-(--color-text-muted)">
+        <p class="text-sm">Nenhum registro de auditoria encontrado</p>
       </div>
     )
   }
   return (
-    <>
-      <div class="space-y-3">
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-3">
         {logs.map((entry, i) => {
-          const acaoColor = ACAO_COLORS[entry.acao] ?? { bg: 'rgba(107,114,128,.15)', text: '#9ca3af' }
+          const acaoStyle = ACAO_STYLES[entry.acao] ?? 'bg-gray-500/15 text-gray-400'
+          const dotStyle = ACAO_DOT[entry.acao] ?? 'bg-gray-500'
           return (
-            <div class="glass-card no-hover" style={`padding:1rem;animation:fadeIn .3s ease ${i * 40}ms both`}>
-              <div class="flex items-center gap-2" style="margin-bottom:.5rem;flex-wrap:wrap">
-                <span style={`display:inline-block;padding:.125rem .5rem;border-radius:9999px;font-size:.6875rem;font-weight:600;text-transform:uppercase;background:${acaoColor.bg};color:${acaoColor.text}`}>{entry.acao}</span>
-                <span class="badge badge-muted">{ENTIDADE_LABELS[entry.entidade] ?? entry.entidade}</span>
-                {entry.revertido && <span style="font-size:.625rem;font-weight:500;color:#fb7185;background:rgba(244,63,94,.1);padding:.125rem .375rem;border-radius:.25rem;border:1px solid rgba(244,63,94,.2)">REVERTIDO</span>}
-                {entry.reverte_ref && <span style="font-size:.625rem;font-weight:500;color:#a78bfa;background:rgba(139,92,246,.1);padding:.125rem .375rem;border-radius:.25rem;border:1px solid rgba(139,92,246,.2)">REVERSÃO</span>}
-                {entry.usuario_email && <span style="font-size:.625rem;color:var(--color-accent);font-weight:500;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title={entry.usuario_email}>{entry.usuario_email}</span>}
-                <span style="margin-left:auto;font-size:.6875rem;color:var(--color-text-muted);font-variant-numeric:tabular-nums">{fmtTs(entry.timestamp)}</span>
+            <div class={CARD} style={`animation:fadeIn .3s ease ${i * 40}ms both`}>
+              <div class="flex items-center gap-2 mb-2 flex-wrap">
+                <span class={`w-2 h-2 rounded-full shrink-0 ${dotStyle}`}></span>
+                <span class={`inline-block px-2 py-0.5 rounded-full text-[.6875rem] font-semibold uppercase ${acaoStyle}`}>{entry.acao}</span>
+                <span class={BADGE}>{ENTIDADE_LABELS[entry.entidade] ?? entry.entidade}</span>
+                {entry.revertido && <span class="text-[.625rem] font-medium text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">REVERTIDO</span>}
+                {entry.reverte_ref && <span class="text-[.625rem] font-medium text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">REVERSÃO</span>}
+                {entry.usuario_email && <span class="text-[.625rem] text-(--color-accent) font-medium max-w-[220px] overflow-hidden text-ellipsis whitespace-nowrap" title={entry.usuario_email}>{entry.usuario_email}</span>}
+                <span class="ml-auto text-[.6875rem] text-(--color-text-muted) tabular-nums">{fmtTs(entry.timestamp)}</span>
               </div>
-              <p style="font-size:.875rem;color:var(--color-text-secondary)">{getAuditDescription(entry)}</p>
-              {entry.justificativa && <p style="font-size:.6875rem;color:var(--color-text-muted);margin-top:.375rem;font-style:italic">"{entry.justificativa}"</p>}
+              <p class="text-sm text-(--color-text-secondary)">{getAuditDescription(entry)}</p>
+              {entry.justificativa && <p class="text-[.6875rem] text-(--color-text-muted) mt-1.5 italic">"{entry.justificativa}"</p>}
               {entry.documentacao_url && (
-                <a href={entry.documentacao_url} target="_blank" download style="display:inline-flex;align-items:center;gap:.375rem;margin-top:.375rem;padding:.25rem .625rem;border-radius:var(--radius-md);font-size:.6875rem;font-weight:500;color:#60a5fa;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);text-decoration:none">📎 {entry.documentacao_url.split('/').pop()}</a>
+                <a href={entry.documentacao_url} target="_blank" download class="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg text-[.6875rem] font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 no-underline">
+                  <Paperclip size={12} /> {entry.documentacao_url.split('/').pop()}
+                </a>
               )}
-              <details class="audit-details">
-                <summary>Detalhes da operação</summary>
-                <div class="audit-payload"><pre>{renderAuditPayload(entry)}</pre></div>
+              <details class="audit-details mt-2 border border-[var(--overlay-border)] rounded-lg overflow-hidden">
+                <summary class="flex items-center gap-2 py-2 px-3 text-xs font-medium text-(--color-text-muted) cursor-pointer bg-slate-800/40 hover:bg-slate-600/30 hover:text-(--color-text-secondary) transition-all duration-150 select-none">Detalhes da operação</summary>
+                <div class="p-3 text-[.6875rem] font-mono bg-(--color-surface-0) text-(--color-text-muted) max-h-[250px] overflow-auto whitespace-pre-wrap break-all leading-relaxed border-t border-[var(--overlay-border)]"><pre>{renderAuditPayload(entry)}</pre></div>
               </details>
               {canRevert(entry) && (
-                <div style="margin-top:.75rem;padding-top:.5rem;border-top:1px solid var(--overlay-border)">
-                  <button class="btn btn-sm" style="background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2);font-size:.75rem" hx-get={`/auditoria/${entry.id}/modal/reverter`} hx-target="#modal-container" hx-swap="innerHTML">↺ Reverter</button>
+                <div class="mt-3 pt-2 border-t border-[var(--overlay-border)]">
+                  <button class={`${BTN_SM} bg-amber-500/10 text-amber-300 border-amber-500/20 text-xs`} hx-get={`/auditoria/${entry.id}/modal/reverter`} hx-target="#modal-container" hx-swap="innerHTML">
+                    <Undo2 size={14} /> Reverter
+                  </button>
                 </div>
               )}
             </div>
@@ -57,12 +84,16 @@ export const AuditoriaTable: FC<AuditoriaTableProps> = ({ logs, pagina, totalPag
         })}
       </div>
       {totalPaginas > 1 && (
-        <div class="flex items-center" style="justify-content:center;gap:1rem;margin-top:1rem">
-          <button class="btn btn-secondary btn-sm" disabled={pagina <= 1} hx-get={`/auditoria/content?pagina=${pagina - 1}`} hx-target="#auditoria-content" hx-include="[name='filtroEntidade'],[name='filtroAcao']">‹</button>
-          <span style="font-size:.875rem;color:var(--color-text-muted);font-variant-numeric:tabular-nums">Página <strong style="color:var(--color-text-primary)">{pagina}</strong> de {totalPaginas}</span>
-          <button class="btn btn-secondary btn-sm" disabled={pagina >= totalPaginas} hx-get={`/auditoria/content?pagina=${pagina + 1}`} hx-target="#auditoria-content" hx-include="[name='filtroEntidade'],[name='filtroAcao']">›</button>
+        <div class="flex items-center justify-center gap-4">
+          <button class={`${BTN_SM} bg-(--color-surface-2) text-(--color-text-primary) border-(--color-border)`} disabled={pagina <= 1} hx-get={`/auditoria/content?pagina=${pagina - 1}`} hx-target="#auditoria-content" hx-include="[name='filtroEntidade'],[name='filtroAcao']">
+            <ChevronLeft size={14} />
+          </button>
+          <span class="text-sm text-(--color-text-muted) tabular-nums">Página <strong class="text-(--color-text-primary)">{pagina}</strong> de {totalPaginas}</span>
+          <button class={`${BTN_SM} bg-(--color-surface-2) text-(--color-text-primary) border-(--color-border)`} disabled={pagina >= totalPaginas} hx-get={`/auditoria/content?pagina=${pagina + 1}`} hx-target="#auditoria-content" hx-include="[name='filtroEntidade'],[name='filtroAcao']">
+            <ChevronRight size={14} />
+          </button>
         </div>
       )}
-    </>
+    </div>
   )
 }

@@ -21,21 +21,21 @@ export const MainLayout: FC<PropsWithChildren<MainLayoutProps>> = ({ title, curr
       hx-on__showToast="showToast(event.detail.message)"
     >
       <Sidebar currentPath={currentPath} />
-      <main class="main-content">
+      <main class="flex-1 ml-[260px] p-8 max-w-[1400px] flex flex-col gap-6 main-responsive">
         {children}
       </main>
       <div id="modal-container"></div>
-      <div id="toast-container"></div>
+      <div id="toast-container" class="fixed top-4 right-4 z-[200] flex flex-col gap-2"></div>
       <script dangerouslySetInnerHTML={{ __html: `
         function showToast(msg){
           var c=document.getElementById('toast-container');
-          var t=document.createElement('div');t.className='toast';t.textContent=msg;
-          c.appendChild(t);setTimeout(function(){t.classList.add('toast-exit');setTimeout(function(){t.remove()},300)},3000);
+          var t=document.createElement('div');t.className='py-3 px-5 rounded-lg text-sm font-medium animate-[slide-in-right_.3s_ease] shadow-[0_4px_12px_rgba(0,0,0,.3)] bg-emerald-500/90 text-white';t.textContent=msg;
+          c.appendChild(t);setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(function(){t.remove()},300)},3000);
         }
         function closeModal(){document.getElementById('modal-container').innerHTML='';document.body.classList.remove('modal-open')}
-        function toggleSidebar(){document.querySelector('.sidebar').classList.toggle('sidebar-open')}
-        function toggleTheme(){var r=document.documentElement;var c=r.getAttribute('data-theme')==='light'?'dark':'light';r.setAttribute('data-theme',c);localStorage.setItem('theme',c)}
-        (function(){var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)})();
+        function toggleSidebar(){document.querySelector('.sidebar-mobile-hidden').classList.toggle('open')}
+        function toggleTheme(){var r=document.documentElement;var c=r.classList.contains('light')?'dark':'light';if(c==='light')r.classList.add('light');else r.classList.remove('light');localStorage.setItem('theme',c)}
+        (function(){var t=localStorage.getItem('theme');if(t==='light')document.documentElement.classList.add('light')})();
       ` }} />
     </body>
   </html>

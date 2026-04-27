@@ -1,7 +1,8 @@
 import type { FC } from 'hono/jsx'
-import { raw } from 'hono/html'
 import { MESES } from '../helpers.js'
 import { SemaforoGrid } from './SemaforoGrid.js'
+import { Users, AlertTriangle, TrendingUp, CalendarRange, FileSpreadsheet, Download } from '../components/Icons.js'
+import { CARD, CARD_SM, SELECT, BTN_SM } from '../ui.js'
 
 interface DashboardContentProps {
   ano: number
@@ -20,66 +21,77 @@ export const DashboardContent: FC<DashboardContentProps> = ({ ano, mes, registro
   const taxaAltas = num(r?.taxa_altas_pct)
 
   return (
-    <>
+    <div class="flex flex-col gap-4 sm:gap-6">
       {/* Period selector */}
-      <div class="glass-card no-hover" style="padding:.75rem 1rem;position:relative;z-index:10">
-        <div class="flex items-center gap-3" style="flex-wrap:wrap">
-          <span style="font-size:.75rem;font-weight:600;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.05em">Período</span>
-          <select class="form-select" style="width:auto" name="mes" hx-get="/dashboard/content" hx-target="#dashboard-content" hx-include="[name='ano']" hx-swap="innerHTML">
+      <div class={`${CARD_SM} relative z-10`}>
+        <div class="flex items-center gap-3 flex-wrap">
+          <CalendarRange size={14} class="text-(--color-accent)" />
+          <span class="text-xs font-semibold text-(--color-text-secondary) uppercase tracking-wide">Período</span>
+          <select class={SELECT} name="mes" hx-get="/dashboard/content" hx-target="#dashboard-content" hx-include="[name='ano']" hx-swap="innerHTML">
             {MESES.map((m, i) => i > 0 ? <option value={i} selected={i === mes}>{m}</option> : null)}
           </select>
-          <select class="form-select" style="width:auto" name="ano" hx-get="/dashboard/content" hx-target="#dashboard-content" hx-include="[name='mes']" hx-swap="innerHTML">
+          <select class={SELECT} name="ano" hx-get="/dashboard/content" hx-target="#dashboard-content" hx-include="[name='mes']" hx-swap="innerHTML">
             {[2025, 2026, 2027].map(y => <option value={y} selected={y === ano}>{y}</option>)}
           </select>
-          <div style="width:1px;height:1.25rem;background:var(--color-border);margin:0 .25rem"></div>
-          <a href={`/api/v1/relatorio/excel/${ano}/${mes}`} target="_blank" class="btn btn-sm" style="background:#059669;color:white">Excel</a>
-          <a href={`/api/v1/relatorio/pdf/${ano}/${mes}`} target="_blank" class="btn btn-primary btn-sm">PDF</a>
+          <div class="w-px h-5 bg-(--color-border) mx-1"></div>
+          <a href={`/api/v1/relatorio/excel/${ano}/${mes}`} target="_blank" class={`${BTN_SM} bg-emerald-600 text-white no-underline hover:bg-emerald-500`}>
+            <FileSpreadsheet size={14} /> Excel
+          </a>
+          <a href={`/api/v1/relatorio/pdf/${ano}/${mes}`} target="_blank" class={`${BTN_SM} bg-(--color-accent) text-white no-underline hover:bg-(--color-accent-hover)`}>
+            <Download size={14} /> PDF
+          </a>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div class="grid grid-3 gap-4">
-        <div class="glass-card no-hover" style="padding:1.25rem">
-          <div class="flex items-center gap-3" style="margin-bottom:.75rem">
-            <div style="width:2.5rem;height:2.5rem;border-radius:var(--radius-md);background:rgba(59,130,246,.15);color:#60a5fa;display:flex;align-items:center;justify-content:center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
-            </div>
-            <div>
-              <p style="font-size:.75rem;color:var(--color-text-muted);font-weight:500">Pacientes Ativos</p>
-              <p style="font-size:1.5rem;font-weight:700;color:var(--color-text-primary);font-variant-numeric:tabular-nums">{pacientesTotal}</p>
-            </div>
-          </div>
-          <p style="font-size:.6875rem;color:var(--color-text-muted)">{pacientesAD} AD · {pacientesID} ID</p>
-        </div>
-        <div class="glass-card no-hover" style="padding:1.25rem">
-          <div class="flex items-center gap-3" style="margin-bottom:.75rem">
-            <div style="width:2.5rem;height:2.5rem;border-radius:var(--radius-md);background:rgba(239,68,68,.15);color:#f87171;display:flex;align-items:center;justify-content:center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
-            </div>
-            <div>
-              <p style="font-size:.75rem;color:var(--color-text-muted);font-weight:500">Eventos Adversos</p>
-              <p style="font-size:1.5rem;font-weight:700;color:var(--color-text-primary);font-variant-numeric:tabular-nums">{eventosAdversos}</p>
-            </div>
-          </div>
-        </div>
-        <div class="glass-card no-hover" style="padding:1.25rem">
-          <div class="flex items-center gap-3" style="margin-bottom:.75rem">
-            <div style="width:2.5rem;height:2.5rem;border-radius:var(--radius-md);background:rgba(16,185,129,.15);color:#34d399;display:flex;align-items:center;justify-content:center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
-            </div>
-            <div>
-              <p style="font-size:.75rem;color:var(--color-text-muted);font-weight:500">Taxa de Altas</p>
-              <p style="font-size:1.5rem;font-weight:700;color:var(--color-text-primary);font-variant-numeric:tabular-nums">{taxaAltas}%</p>
-            </div>
-          </div>
-        </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <KpiCard
+          icon={<Users size={20} />}
+          iconClass="bg-blue-500/15 text-blue-400"
+          label="Pacientes Ativos"
+          valor={pacientesTotal}
+          descricao={`${pacientesAD} em Atenção Domiciliar (AD) e ${pacientesID} em Internação Domiciliar (ID)`}
+          delay={0}
+        />
+        <KpiCard
+          icon={<AlertTriangle size={20} />}
+          iconClass="bg-red-500/15 text-red-400"
+          label="Eventos Adversos"
+          valor={eventosAdversos}
+          descricao="Inclui quedas, broncoaspiração, lesão por pressão, decanulação e saída de GTT"
+          delay={60}
+        />
+        <KpiCard
+          icon={<TrendingUp size={20} />}
+          iconClass="bg-emerald-500/15 text-emerald-400"
+          label="Taxa de Altas"
+          valor={`${taxaAltas}%`}
+          descricao="Percentual de pacientes que receberam alta domiciliar no período"
+          delay={120}
+        />
       </div>
 
       {/* Semáforos */}
       <div>
-        <h3 style="font-size:.875rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:1rem">Indicadores — Semáforos</h3>
+        <h3 class="text-sm font-semibold text-(--color-text-muted) uppercase tracking-wider mb-4">Indicadores — Semáforos</h3>
         <SemaforoGrid indicadores={indicadores} />
       </div>
-    </>
+    </div>
   )
 }
+
+/* ─── Sub-component ─── */
+const KpiCard: FC<{ icon: unknown; iconClass: string; label: string; valor: string | number; descricao: string; delay: number }> = ({ icon, iconClass, label, valor, descricao, delay }) => (
+  <div class={`${CARD} animate-[fade-in_.3s_ease_${delay}ms_both]`}>
+    <div class="flex items-center gap-3 mb-3">
+      <div class={`w-10 h-10 rounded-lg flex items-center justify-center ${iconClass}`}>
+        {icon}
+      </div>
+      <div>
+        <p class="text-xs text-(--color-text-muted) font-medium uppercase tracking-wider">{label}</p>
+        <p class="text-2xl sm:text-3xl font-bold text-(--color-text-primary) tabular-nums mt-0.5">{valor}</p>
+      </div>
+    </div>
+    <p class="text-[.6875rem] text-(--color-text-muted) leading-relaxed">{descricao}</p>
+  </div>
+)
