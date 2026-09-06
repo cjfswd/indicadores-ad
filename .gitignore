@@ -13,3 +13,6 @@ Thumbs.db
 .VSCodeCounter/
 uploads/
 *.tsbuildinfo
+
+# CSS gerado pelo Tailwind no build
+public/css/
